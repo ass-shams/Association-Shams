@@ -1,0 +1,83 @@
+/**
+ * RTL / Arabic foundation.
+ *
+ * Only logical properties are used (inline-start / inline-end / block),
+ * never physical left/right, so the whole layout mirrors automatically.
+ */
+
+:root {
+  --color-text: #1c1c1e;
+  --color-muted: #5f6368;
+  --color-surface: #ffffff;
+  --color-border: #e2e2e6;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 2rem;
+  --measure: 72ch;
+  --font-arabic: 'Cairo', 'Tajawal', 'IBM Plex Sans Arabic', 'Noto Sans Arabic',
+    'Geeza Pro', 'Segoe UI', system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+html[lang='ar'] {
+  direction: rtl;
+  text-align: start;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-arabic);
+  line-height: 1.8;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+}
+
+:where(h1, h2, h3, h4, h5, h6) {
+  line-height: 1.4;
+  margin-block: 0 var(--space-sm);
+  text-wrap: balance;
+}
+
+:where(p, li) {
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+/* Latin fragments (emails, URLs, codes) stay readable inside Arabic text. */
+:where(p, li, td, a) {
+  unicode-bidi: plaintext;
+}
+
+a {
+  color: inherit;
+}
+
+img,
+svg {
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

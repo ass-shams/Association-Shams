@@ -1,0 +1,126 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100dvh;
+}
+
+.skipLink {
+  position: absolute;
+  inset-block-start: var(--space-sm);
+  inset-inline-start: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  z-index: 10;
+}
+
+.header {
+  border-block-end: 1px solid var(--color-border);
+}
+
+.headerInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  max-inline-size: 1200px;
+  margin-inline: auto;
+  padding: var(--space-md);
+}
+
+.brand {
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.mainNav {
+  flex: 1 1 auto;
+}
+
+.navList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navLink,
+.navLinkActive {
+  text-decoration: none;
+}
+
+.navLinkActive {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.main {
+  flex: 1 1 auto;
+  inline-size: 100%;
+  max-inline-size: var(--measure);
+  margin-inline: auto;
+  padding: var(--space-lg) var(--space-md);
+}
+
+.footer {
+  border-block-start: 1px solid var(--color-border);
+}
+
+.footerGrid {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  max-inline-size: 1200px;
+  margin-inline: auto;
+  padding: var(--space-lg) var(--space-md);
+}
+
+.footerHeading {
+  font-size: 1rem;
+}
+
+.footerList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.footerLink {
+  text-decoration: none;
+}
+
+.footerBottom {
+  border-block-start: 1px solid var(--color-border);
+  padding: var(--space-md);
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.page {
+  min-block-size: 40dvh;
+}
+
+.pageTitle {
+  margin-block-start: 0;
+}
+
+.errorBox,
+.fallbackBox {
+  text-align: center;
+}
+
+.errorBox h1 {
+  font-size: 1.5rem;
+}
+
+.errorBox p {
+  color: var(--color-muted);
+}
+
+.errorLink {
+  display: inline-block;
+  margin-block-start: var(--space-md);
+}
