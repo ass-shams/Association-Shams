@@ -180,24 +180,6 @@ const ACTIVITIES: readonly {
   },
 ];
 
-const NEWS_PREVIEW = [
-  {
-    category: 'مسابقة',
-    title: 'عندك موهبة فالغناء؟ الفرصة بين يديك!',
-    text: 'شارك في مسابقة الصوت الذهبي وأبرز موهبتك في الغناء أمام جمهور الجمعية.',
-  },
-  {
-    category: 'دورات تدريبية',
-    title: 'فتح باب التسجيل في دورات تدريبية مجانية',
-    text: 'فتح باب التسجيل في دورات تدريبية مجانية موجهة لفائدة المكفوفين وضعاف البصر.',
-  },
-  {
-    category: 'أنشطة تربوية',
-    title: 'تنظيم صبيحة خاصة لأطفالنا الأعزاء',
-    text: 'صبيحة مليئة بالنشاط، الترفيه، والإبداع في أجواء تربوية ممتعة ومميزة.',
-  },
-];
-
 type FaqItem = {
   question: string;
   answer: ReactNode;
@@ -511,35 +493,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 5. News preview */}
-      <section className="section section--default section--pad-default">
-        <div className="container">
-          <div className="section-heading">
-            <h2 className="section-heading__title">آخر الأخبار</h2>
-            <p className="section-heading__lead">تابع آخر المستجدات والفعاليات القادمة للجمعية.</p>
-          </div>
-          <div className="grid">
-            {NEWS_PREVIEW.map((item) => (
-              <article key={item.title} className="card card--fill news-card">
-                <div className="card__header">
-                  <span className="badge badge--info">{item.category}</span>
-                  <h3 className="card-title">{item.title}</h3>
-                </div>
-                <div className="card__body">
-                  <p className="card-text">{item.text}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-          <div className="stack stack--column stack--center stack--gap-md section-action">
-            <a className="btn btn--secondary btn--md" href="/news">
-              جميع الأخبار
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. FAQ */}
+      {/* 5. FAQ */}
       <section className="section section--muted section--pad-default">
         <div className="container">
           <div className="section-heading">
@@ -562,7 +516,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 7. Membership CTA */}
+      {/* 6. Membership CTA */}
       <FinalCTA
         tone="muted"
         title="انضم إلينا"

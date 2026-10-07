@@ -69,7 +69,6 @@ interface FooterLink {
 const ABOUT_LINKS: readonly FooterLink[] = [
   { to: '/about', label: 'من نحن' },
   { to: '/activities', label: 'أنشطتنا' },
-  { to: '/news', label: 'الأخبار' },
   { to: '/golden-voice', label: 'مسابقة الصوت الذهبي' },
 ];
 

@@ -13,7 +13,6 @@ export const NAV_LINKS: readonly NavLinkItem[] = [
   { to: '/', label: 'الرئيسية' },
   { to: '/about', label: 'من نحن' },
   { to: '/activities', label: 'أنشطتنا' },
-  { to: '/news', label: 'الأخبار' },
   { to: '/store', label: 'المتجر' },
   { to: '/documents', label: 'الوثائق الإدارية' },
   { to: '/meetings', label: 'المحاضر والاجتماعات' },

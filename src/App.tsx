@@ -10,7 +10,6 @@ import GoldenVoicePage from '@/pages/public/GoldenVoicePage';
 import HomePage from '@/pages/public/HomePage';
 import MeetingsPage from '@/pages/public/MeetingsPage';
 import MembershipPage from '@/pages/public/MembershipPage';
-import NewsPage from '@/pages/public/NewsPage';
 import StorePage from '@/pages/public/StorePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import '@/styles.css';
@@ -47,7 +46,6 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/activities" element={<ActivitiesPage />} />
-            <Route path="/news" element={<NewsPage />} />
             <Route path="/store" element={<StorePage />} />
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/meetings" element={<MeetingsPage />} />
