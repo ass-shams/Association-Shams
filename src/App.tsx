@@ -8,8 +8,8 @@ import ContactPage from '@/pages/public/ContactPage';
 import DocumentsPage from '@/pages/public/DocumentsPage';
 import GoldenVoicePage from '@/pages/public/GoldenVoicePage';
 import HomePage from '@/pages/public/HomePage';
-import MeetingsPage from '@/pages/public/MeetingsPage';
 import MembershipPage from '@/pages/public/MembershipPage';
+import ProductDetailsPage from '@/pages/public/ProductDetailsPage';
 import StorePage from '@/pages/public/StorePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import '@/styles.css';
@@ -47,8 +47,8 @@ export default function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/activities" element={<ActivitiesPage />} />
             <Route path="/store" element={<StorePage />} />
+            <Route path="/store/:slug" element={<ProductDetailsPage />} />
             <Route path="/documents" element={<DocumentsPage />} />
-            <Route path="/meetings" element={<MeetingsPage />} />
             <Route path="/membership" element={<MembershipPage />} />
             <Route path="/golden-voice" element={<GoldenVoicePage />} />
             <Route path="/contact" element={<ContactPage />} />

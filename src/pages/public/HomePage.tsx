@@ -2,17 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactElement, ReactNode } from 'react';
 import FinalCTA from '@/components/finalCTA';
 
-function CalendarIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <path d="M3 10h18" />
-      <path d="M8 2v4" />
-      <path d="M16 2v4" />
-    </svg>
-  );
-}
-
 function FileTextIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
@@ -127,12 +116,6 @@ const QUICK_LINKS: readonly {
     description: 'استعرض الوثائق والنماذج الإدارية الرسمية للجمعية.',
     to: '/documents',
     icon: FileTextIcon,
-  },
-  {
-    title: 'المحاضر والاجتماعات',
-    description: 'اطلع على محاضر الاجتماعات والتقارير الدورية.',
-    to: '/meetings',
-    icon: CalendarIcon,
   },
   {
     title: 'الانخراط',

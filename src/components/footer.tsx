@@ -75,7 +75,6 @@ const ABOUT_LINKS: readonly FooterLink[] = [
 const QUICK_LINKS: readonly FooterLink[] = [
   { to: '/store', label: 'المتجر' },
   { to: '/documents', label: 'الوثائق الإدارية' },
-  { to: '/meetings', label: 'المحاضر والاجتماعات' },
   { to: '/membership', label: 'الانخراط' },
   { to: '/contact', label: 'اتصل بنا' },
 ];
