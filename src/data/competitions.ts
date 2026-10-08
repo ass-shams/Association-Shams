@@ -11,16 +11,16 @@ import type { Competition } from '@/types';
 export const competitions: readonly Competition[] = [
   {
     slug: 'golden-voice',
-    title: 'مسابقة الصوت الذهبي',
+    title: 'مسابقة الصوت الذهبي لللأغنية العربية و الامازيغية ',
     description:
-      'مبادرة ثقافية لاكتشاف المواهب الصوتية وتنميتها، ومنح المشاركين فرصة لإبراز قدراتهم وإبداعهم.',
+      'بدعم من وزارة الشباب والثقافة والتواصل قطاع الثقافة تعلن الجمعية عن انطلاق عملية التسجيل للمشاركة في الدورة الثانية لمسابقة الصوت الذهبي للأغنية العربية والغربية',
     status: 'مفتوحة',
     href: '/competitions/golden-voice',
     image: {
       src: goldenVoiceImage,
       alt: 'صورة توضيحية لمسابقة الصوت الذهبي',
     },
-    registrationDeadline: '30 أكتوبر 2026',
+    registrationDeadline: '23 أكتوبر 2026',
     participantsCount: 128,
   },
 ];

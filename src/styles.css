@@ -1685,6 +1685,7 @@ button:disabled,
 
 .page-hero__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--sp-3);
   margin-block-start: var(--sp-1);
 }
@@ -1754,17 +1755,6 @@ button:disabled,
   background-color: var(--c-success-text);
   border-color: var(--c-success-text);
   color: var(--c-white);
-}
-
-@media (width < 560px) {
-  .final-cta__actions {
-    inline-size: 100%;
-    flex-direction: column;
-  }
-
-  .final-cta__actions .btn {
-    inline-size: 100%;
-  }
 }
 
 /* ==========================================================================
@@ -2063,6 +2053,31 @@ button:disabled,
 
 .section-action {
   margin-block-start: var(--sp-6);
+}
+
+/* Phones: every two-button action row stacks — one full-width button per line. */
+@media (width < 640px) {
+  .page-hero__actions,
+  .about-hero__actions,
+  .act-hero__actions,
+  .home-hero__actions,
+  .store-hero__actions,
+  .final-cta__actions {
+    inline-size: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-3);
+  }
+
+  .page-hero__actions .btn,
+  .about-hero__actions .btn,
+  .act-hero__actions .btn,
+  .home-hero__actions .btn,
+  .store-hero__actions .btn,
+  .final-cta__actions .btn {
+    inline-size: 100%;
+    padding-inline: var(--sp-4);
+  }
 }
 
 /* ==========================================================================
