@@ -1,6 +1,6 @@
 export interface FinalCTAProps {
-  title: string;
-  text: string;
+  title?: string;
+  text?: string;
   tone?: 'default' | 'muted';
 }
 
@@ -9,6 +9,11 @@ const MEMBERSHIP_LABEL = 'انخرط معنا';
 const MEMBERSHIP_HREF = '/membership';
 const WHATSAPP_LABEL = 'راسلنا في الوتساب ';
 const WHATSAPP_HREF = 'https://wa.me/212663071162';
+
+/** Default copy used when a page does not supply its own. */
+const DEFAULT_TITLE = 'انضم إلينا';
+const DEFAULT_TEXT =
+  'كن جزءاً من مجتمع يسعى إلى النمو والتضامن المتبادل. يمنحك الانخراط فرصة الوصول إلى برامج الجمعية وفعالياتها والمساهمة الفعالة في خدمة المجتمع.';
 
 function WhatsAppIcon() {
   return (
@@ -25,7 +30,11 @@ function WhatsAppIcon() {
  * The two actions (membership + WhatsApp) are defined here so every page
  * stays consistent; only the title and text vary per page.
  */
-export default function FinalCTA({ title, text, tone = 'muted' }: FinalCTAProps) {
+export default function FinalCTA({
+  title = DEFAULT_TITLE,
+  text = DEFAULT_TEXT,
+  tone = 'muted',
+}: FinalCTAProps) {
   return (
     <section className={`section section--${tone} section--pad-default`}>
       <div className="container">

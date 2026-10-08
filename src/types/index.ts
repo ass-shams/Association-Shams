@@ -79,3 +79,34 @@ export interface Product {
   /** Explicit relationships; when omitted the service derives them. */
   relatedSlugs?: string[]
 }
+
+/**
+ * Public competitions domain types.
+ *
+ * These describe the shape of the competitions displayed on `/competitions`.
+ * Adding a future competition is primarily a matter of appending an object to
+ * `src/data/competitions.ts`.
+ */
+
+export interface CompetitionImage {
+  src: string
+  alt: string
+  /** Optional CSS object-position used when the card crops the image. */
+  position?: string
+}
+
+export interface Competition {
+  slug: string
+  title: string
+  description: string
+  /** Optional human-readable status shown on the card (e.g. مفتوحة). */
+  status?: string
+  /** Optional route to the competition's detail page, when one exists. */
+  href?: string
+  /** Optional cover image shown at the top of the card. */
+  image?: CompetitionImage
+  /** Human-readable registration deadline (e.g. 30 أكتوبر 2026). */
+  registrationDeadline?: string
+  /** Number of registered participants. */
+  participantsCount?: number
+}

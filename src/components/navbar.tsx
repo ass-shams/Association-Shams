@@ -16,7 +16,7 @@ export const NAV_LINKS: readonly NavLinkItem[] = [
   { to: '/store', label: 'المتجر' },
   { to: '/documents', label: 'الوثائق الإدارية' },
   { to: '/membership', label: 'الانخراط' },
-  { to: '/golden-voice', label: 'مسابقة الصوت الذهبي' },
+  { to: '/competitions', label: 'المسابقات' },
   { to: '/contact', label: 'اتصل بنا' },
 ];
 
