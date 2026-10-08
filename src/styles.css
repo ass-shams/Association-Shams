@@ -1084,9 +1084,7 @@ button:disabled,
   padding-block: var(--section-block);
 }
 
-.section--default {
-  background-color: var(--c-white);
-}
+
 
 .section--muted {
   background-color: var(--c-bg);
