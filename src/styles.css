@@ -3773,6 +3773,14 @@ button:disabled,
   max-inline-size: 100%;
 }
 
+/* Center the Turnstile widget within the form on smaller screens. */
+@media (width < 900px) {
+  .turnstile-field {
+    display: flex;
+    justify-content: center;
+  }
+}
+
 .form-alert {
   margin: 0 0 var(--sp-4);
   padding: var(--sp-3) var(--sp-4);
