@@ -189,16 +189,6 @@ export default function GoldenVoiceRegistrationForm() {
     }
   }
 
-  function handleReset() {
-    setValues(EMPTY_VALUES);
-    setErrors({});
-    setVideo(null);
-    setSubmitted(false);
-    setPhase('idle');
-    setProgress(0);
-    setSubmitError('');
-  }
-
   if (submitted) {
     return (
       <div className="gv-card">
@@ -210,9 +200,6 @@ export default function GoldenVoiceRegistrationForm() {
           <p className="gv-success__text">
             تم تسجيل طلبك بنجاح. سنتواصل معك عند الحاجة في المراحل المقبلة.
           </p>
-          <button type="button" className="btn btn--outline btn--md" onClick={handleReset}>
-            تعديل الطلب
-          </button>
         </div>
       </div>
     );
