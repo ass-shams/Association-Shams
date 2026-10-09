@@ -130,39 +130,42 @@ export function resolveUploadTotal(
 }
 
 /**
- * Build the same multipart body `supabase-js` sends, but as a single `Blob`.
- *
- * A `Blob` body has a known total size, so browsers set `Content-Length` and
- * report `lengthComputable`/`total` for smooth progress. A `FormData` body may
- * be sent chunked with no exposed length.
+ * Resolve a bucket-allowed video MIME type. The extension is authoritative
+ * because the file was already accepted as MP4/WebM, and some browsers leave
+ * `file.type` empty, which would otherwise be rejected by the bucket's
+ * `allowed_mime_types` check.
  */
-function buildMultipartBody(file: File): Blob {
-  const boundary = `----shamsGoldenVoice${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`;
-  const safeName = file.name.replace(/["\r\n]/g, '_') || 'video';
-  const prefix =
-    `--${boundary}\r\n` +
-    `Content-Disposition: form-data; name="cacheControl"\r\n\r\n` +
-    `${UPLOAD_CACHE_CONTROL}\r\n` +
-    `--${boundary}\r\n` +
-    `Content-Disposition: form-data; name=""; filename="${safeName}"\r\n` +
-    `Content-Type: ${file.type || 'application/octet-stream'}\r\n\r\n`;
-  const suffix = `\r\n--${boundary}--\r\n`;
+export function resolveVideoContentType(file: File): string {
+  const extension = file.name.slice(file.name.lastIndexOf('.') + 1).toLowerCase();
+  if (extension === 'webm') {
+    return 'video/webm';
+  }
+  if (extension === 'mp4') {
+    return 'video/mp4';
+  }
 
-  return new Blob([prefix, file, suffix], {
-    type: `multipart/form-data; boundary=${boundary}`,
-  });
+  const type = file.type.toLowerCase();
+  return type === 'video/webm' || type === 'video/mp4' ? type : 'video/mp4';
 }
 
 /**
  * Upload the file to the signed URL with real byte-level progress.
  *
  * `supabase-js`'s `uploadToSignedUrl` uses `fetch`, which exposes no upload
- * progress. This performs the identical signed request (same URL, headers and
- * multipart body) through `XMLHttpRequest`, whose upload progress events give
- * the actual transmitted-bytes ratio. The security model is unchanged: the
- * upload still targets one server-issued, non-guessable object path.
+ * progress. This performs the same signed request through `XMLHttpRequest`,
+ * whose upload progress events give the actual transmitted-bytes ratio.
+ *
+ * The file is sent as the raw request body. Supabase Storage parses the signed
+ * upload route and the regular upload route with the same pipeline, and raw
+ * bodies are supported there; the previous hand-built multipart body was
+ * rejected because the `Blob` type is lowercased, so the boundary in the
+ * `Content-Type` header no longer matched the boundary in the body
+ * ("Unexpected end of multipart data"). Sending the raw `File` lets the browser
+ * manage framing and set `Content-Length` from the known size, which also keeps
+ * upload progress computable. The security model is unchanged: the upload still
+ * targets one server-issued, non-guessable object path with `upsert: false`.
  */
-function uploadFileWithProgress(
+export function uploadToSignedUrlWithProgress(
   upload: SignedUpload,
   file: File,
   onPercent: (percent: number) => void,
@@ -175,16 +178,15 @@ function uploadFileWithProgress(
   }
 
   return new Promise((resolve, reject) => {
-    const body = buildMultipartBody(file);
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', buildSignedUploadUrl(supabaseUrl, upload.bucket, upload.path, upload.token), true);
     xhr.setRequestHeader('apikey', anonKey);
     xhr.setRequestHeader('Authorization', `Bearer ${anonKey}`);
     xhr.setRequestHeader('x-upsert', 'false');
+    xhr.setRequestHeader('cache-control', `max-age=${UPLOAD_CACHE_CONTROL}`);
+    xhr.setRequestHeader('content-type', resolveVideoContentType(file));
 
-    // Register the listener before send: upload listeners must be attached
-    // before `send()`, and they also opt the request into CORS (allowed by the
-    // Storage endpoint).
+    // Attach upload listeners before send() or no upload progress is emitted.
     xhr.upload.addEventListener(
       'progress',
       (event) => {
@@ -212,7 +214,7 @@ function uploadFileWithProgress(
     xhr.onabort = () => reject(new Error(UPLOAD_ERROR));
     xhr.ontimeout = () => reject(new Error(UPLOAD_ERROR));
 
-    xhr.send(body);
+    xhr.send(file);
   });
 }
 
@@ -257,7 +259,7 @@ export async function submitGoldenVoiceRegistration(
     const upload = await createSignedUpload(video.file.type);
 
     report({ phase: 'uploading', percent: 0 });
-    await uploadFileWithProgress(upload, video.file, (percent) => {
+    await uploadToSignedUrlWithProgress(upload, video.file, (percent) => {
       report({ phase: 'uploading', percent });
     });
 
