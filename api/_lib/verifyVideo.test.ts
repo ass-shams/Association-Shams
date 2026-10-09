@@ -10,7 +10,7 @@ import {
   VIDEO_NOT_FOUND_MESSAGE,
   VIDEO_SIZE_MESSAGE,
   VIDEO_TOO_LONG_MESSAGE,
-} from '../../src/pages/competitions/golden-voice/validation';
+} from '../../src/pages/competitions/golden-voice/validation.js';
 
 /** Mutable storage mock state, shared with the hoisted `vi.mock` factory. */
 const state = vi.hoisted(() => ({
@@ -19,7 +19,7 @@ const state = vi.hoisted(() => ({
   objectSize: null as number | null,
 }));
 
-vi.mock('./supabaseAdmin', () => ({
+vi.mock('./supabaseAdmin.js', () => ({
   getSupabaseAdmin: () => ({
     storage: {
       from: () => ({
@@ -37,7 +37,7 @@ vi.mock('./supabaseAdmin', () => ({
   }),
 }));
 
-import { verifyVideo } from './goldenVoice';
+import { verifyVideo } from './goldenVoice.js';
 
 const FIXTURES_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '__fixtures__');
 const OBJECT_PATH = 'golden-voice/123e4567-e89b-12d3-a456-426614174000.mp4';

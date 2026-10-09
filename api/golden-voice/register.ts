@@ -1,15 +1,15 @@
 import type { ServerResponse } from 'node:http';
-import { methodNotAllowed, sendJson } from '../_lib/http';
-import type { ApiRequest } from '../_lib/http';
-import { getSupabaseAdmin } from '../_lib/supabaseAdmin';
+import { methodNotAllowed, sendJson } from '../_lib/http.js';
+import type { ApiRequest } from '../_lib/http.js';
+import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 import {
   GOLDEN_VOICE_TABLE,
   isValidVideoPath,
   readJsonBody,
   removeObject,
   verifyVideo,
-} from '../_lib/goldenVoice';
-import type { RegionValue } from '../../src/pages/competitions/golden-voice/constants';
+} from '../_lib/goldenVoice.js';
+import type { RegionValue } from '../../src/pages/competitions/golden-voice/constants.js';
 import {
   isRegionValue,
   isVideoRequired,
@@ -17,8 +17,8 @@ import {
   validateRegistration,
   VIDEO_NOT_FOUND_MESSAGE,
   VIDEO_REQUIRED_MESSAGE,
-} from '../../src/pages/competitions/golden-voice/validation';
-import type { RegistrationValues } from '../../src/pages/competitions/golden-voice/types';
+} from '../../src/pages/competitions/golden-voice/validation.js';
+import type { RegistrationValues } from '../../src/pages/competitions/golden-voice/types.js';
 
 /** Keep the function within its processing window for large uploads. */
 export const config = { maxDuration: 60 };

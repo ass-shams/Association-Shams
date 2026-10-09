@@ -1,15 +1,15 @@
 import { randomUUID } from 'node:crypto';
 import type { ServerResponse } from 'node:http';
-import { methodNotAllowed, sendJson } from '../_lib/http';
-import type { ApiRequest } from '../_lib/http';
-import { getSupabaseAdmin } from '../_lib/supabaseAdmin';
-import { GOLDEN_VOICE_BUCKET, VIDEO_PATH_PREFIX, readJsonBody } from '../_lib/goldenVoice';
-import { OTHER_REGION } from '../../src/pages/competitions/golden-voice/constants';
+import { methodNotAllowed, sendJson } from '../_lib/http.js';
+import type { ApiRequest } from '../_lib/http.js';
+import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
+import { GOLDEN_VOICE_BUCKET, VIDEO_PATH_PREFIX, readJsonBody } from '../_lib/goldenVoice.js';
+import { OTHER_REGION } from '../../src/pages/competitions/golden-voice/constants.js';
 import {
   isAcceptedVideoMime,
   isRegionValue,
   VIDEO_FORMAT_MESSAGE,
-} from '../../src/pages/competitions/golden-voice/validation';
+} from '../../src/pages/competitions/golden-voice/validation.js';
 
 const SERVICE_UNAVAILABLE_MESSAGE = 'الخدمة غير متاحة مؤقتاً. المرجو المحاولة لاحقاً.';
 

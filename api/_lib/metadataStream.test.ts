@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { getMp4DurationFromMoov, getWebmDurationFromInfo } from './mediaDuration';
+import { getMp4DurationFromMoov, getWebmDurationFromInfo } from './mediaDuration.js';
 import {
   VideoTooLargeError,
   collectMp4Metadata,
   collectWebmMetadata,
   createByteReader,
   detectContainer,
-} from './metadataStream';
+} from './metadataStream.js';
 
 const FIXTURES_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '__fixtures__');
 

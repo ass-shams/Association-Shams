@@ -1,4 +1,4 @@
-import type { RegionValue } from './constants';
+import type { RegionValue } from './constants.js';
 
 /** Editable values of the Golden Voice registration form. */
 export interface RegistrationValues {

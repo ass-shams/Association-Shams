@@ -1,20 +1,20 @@
-import { getSupabaseAdmin } from './supabaseAdmin';
-import { getMp4DurationFromMoov, getWebmDurationFromInfo } from './mediaDuration';
+import { getSupabaseAdmin } from './supabaseAdmin.js';
+import { getMp4DurationFromMoov, getWebmDurationFromInfo } from './mediaDuration.js';
 import {
   VideoTooLargeError,
   collectMp4Metadata,
   collectWebmMetadata,
   createByteReader,
   detectContainer,
-} from './metadataStream';
-import { VIDEO_MAX_BYTES, VIDEO_MAX_DURATION_SECONDS } from '../../src/pages/competitions/golden-voice/constants';
+} from './metadataStream.js';
+import { VIDEO_MAX_BYTES, VIDEO_MAX_DURATION_SECONDS } from '../../src/pages/competitions/golden-voice/constants.js';
 import {
   VIDEO_DURATION_UNVERIFIABLE_MESSAGE,
   VIDEO_FORMAT_MESSAGE,
   VIDEO_NOT_FOUND_MESSAGE,
   VIDEO_SIZE_MESSAGE,
   VIDEO_TOO_LONG_MESSAGE,
-} from '../../src/pages/competitions/golden-voice/validation';
+} from '../../src/pages/competitions/golden-voice/validation.js';
 
 /** Dedicated database table for Golden Voice registrations. */
 export const GOLDEN_VOICE_TABLE = 'golden_voice_registrations';

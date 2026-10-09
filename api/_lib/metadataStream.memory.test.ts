@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { getMp4DurationFromMoov } from './mediaDuration';
-import { collectMp4Metadata, createByteReader } from './metadataStream';
+import { getMp4DurationFromMoov } from './mediaDuration.js';
+import { collectMp4Metadata, createByteReader } from './metadataStream.js';
 
 function writeUint32(bytes: Uint8Array, offset: number, value: number): void {
   bytes[offset] = (value >>> 24) & 0xff;

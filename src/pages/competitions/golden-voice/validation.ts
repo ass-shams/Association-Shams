@@ -4,9 +4,9 @@ import {
   OTHER_REGION,
   REGION_OPTIONS,
   VIDEO_MAX_DURATION_SECONDS,
-} from './constants';
-import type { RegionValue } from './constants';
-import type { RegistrationErrors, RegistrationValues } from './types';
+} from './constants.js';
+import type { RegionValue } from './constants.js';
+import type { RegistrationErrors, RegistrationValues } from './types.js';
 
 /** Digits-only age, no sign, decimal point or whitespace. */
 const AGE_PATTERN = /^\d+$/;

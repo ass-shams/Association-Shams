@@ -5,7 +5,7 @@ const state = vi.hoisted(() => ({
   urlError: null as { name: string } | null,
 }));
 
-vi.mock('./supabaseAdmin', () => ({
+vi.mock('./supabaseAdmin.js', () => ({
   getSupabaseAdmin: () => ({
     storage: {
       from: () => ({
@@ -20,7 +20,7 @@ vi.mock('./supabaseAdmin', () => ({
   }),
 }));
 
-import handler from '../golden-voice/uploads';
+import handler from '../golden-voice/uploads.js';
 
 function createResponse() {
   let body = '';

@@ -8,7 +8,7 @@ const state = vi.hoisted(() => ({
   removed: [] as string[],
 }));
 
-vi.mock('./supabaseAdmin', () => ({
+vi.mock('./supabaseAdmin.js', () => ({
   getSupabaseAdmin: () => ({
     from: () => ({
       insert: async (row: Record<string, unknown>) => {
@@ -19,8 +19,8 @@ vi.mock('./supabaseAdmin', () => ({
   }),
 }));
 
-vi.mock('./goldenVoice', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./goldenVoice')>();
+vi.mock('./goldenVoice.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./goldenVoice.js')>();
   return {
     ...actual,
     verifyVideo: async () => state.verify,
@@ -30,7 +30,7 @@ vi.mock('./goldenVoice', async (importOriginal) => {
   };
 });
 
-import handler from '../golden-voice/register';
+import handler from '../golden-voice/register.js';
 
 const OBJECT_PATH = 'golden-voice/123e4567-e89b-12d3-a456-426614174000.mp4';
 const BASE = { fullName: 'سعاد العلمي', phone: '0612345678', age: 22, city: 'بني ملال' };
