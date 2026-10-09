@@ -1,6 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
-import type { FormEvent, ReactElement, ReactNode } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import FinalCTA from '@/components/finalCTA';
+import heroImage1 from '@/assets/home-page-images/hero-01.png';
+import heroImage2 from '@/assets/home-page-images/hero-02.png';
+import heroImage3 from '@/assets/home-page-images/hero-03.png';
+
+/** Team photos shown in the Hero, in their initial right / center / left slots. */
+const HERO_IMAGES = [
+  { src: heroImage1, alt: 'صورة جماعية لأعضاء فريق جمعية شمس' },
+  { src: heroImage2, alt: 'متطوعو جمعية شمس خلال نشاط ميداني' },
+  { src: heroImage3, alt: 'فريق جمعية شمس خلال لقاء مجتمعي' },
+] as const;
 
 function FileTextIcon() {
   return (
@@ -31,24 +41,6 @@ function UsersIcon() {
       <circle cx="9" cy="7" r="4" />
       <path d="M22 21v-2a4 4 0 0 0-3-3.9" />
       <path d="M16 3.1a4 4 0 0 1 0 7.8" />
-    </svg>
-  );
-}
-
-/** Neutral outline star — placeholder only, it must not imply an actual rating. */
-function StarIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <path d="M12 2.6l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.1l6.1-.9z" />
-    </svg>
-  );
-}
-
-/** Checkmark used by the local interest-form success state. */
-function CheckIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <path d="M20 6 9 17l-5-5" />
     </svg>
   );
 }
@@ -215,157 +207,91 @@ const FAQ_ITEMS: readonly FaqItem[] = [
   },
 ];
 
-const GOOGLE_MAPS_URL = 'https://maps.app.goo.gl/pJLmCJcz61CLmcyz5';
-
 export default function HomePage() {
-  const [interestSubmitted, setInterestSubmitted] = useState(false);
-  const successRef = useRef<HTMLDivElement>(null);
+  // Slots are indexed by visual position: [left, center, right]; values are HERO_IMAGES indices.
+  const [slots, setSlots] = useState<number[]>([2, 1, 0]);
+  const [paused, setPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
-    if (interestSubmitted) {
-      successRef.current?.focus();
-    }
-  }, [interestSubmitted]);
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReducedMotion(query.matches);
 
-  function handleInterestSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    update();
+    query.addEventListener('change', update);
 
-    const data = new FormData(event.currentTarget);
-    const fullName = String(data.get('fullName') ?? '').trim();
-    const phone = String(data.get('phone') ?? '').trim();
+    return () => query.removeEventListener('change', update);
+  }, []);
 
-    if (!fullName || !phone) {
+  useEffect(() => {
+    if (paused || reducedMotion) {
       return;
     }
 
-    setInterestSubmitted(true);
-  }
+    const interval = window.setInterval(() => {
+      // Advance one slot: left → center, center → right, right → left.
+      setSlots((prev) => [prev[2], prev[0], prev[1]]);
+    }, 2000);
+
+    return () => window.clearInterval(interval);
+  }, [paused, reducedMotion]);
 
   return (
     <>
-      {/* 1. Hero — Golden Voice */}
+      {/* 1. Hero — community welcome */}
       <section
         className="section section--plain section--pad-none home-hero-section"
-        style={{ backgroundColor: '#f2bc2d' }}
+        aria-labelledby="home-hero-title"
       >
         <div className="container">
           <div className="home-hero">
-            {/* Right side in RTL: competition message */}
-            <div className="home-hero__content">
-              <div className="home-hero__intro">
-                <p className="home-hero__eyebrow">مسابقة الصوت الذهبي</p>
-                <h1 className="home-hero__title">صوتك يستحق أن يُسمع</h1>
-                <p className="home-hero__lead">
-                  اكتشف مسابقة الصوت الذهبي، وامنح صوتك فرصة ليصل ويترك أثرًا.
-                </p>
-              </div>
+            <div className="home-hero__intro">
+              <p className="home-hero__eyebrow">جمعية شمس للكفيف و المبصر</p>
+              <h1 id="home-hero-title" className="home-hero__title">
+                معًا نصنع الأثر، ونبني مستقبلًا أفضل
+              </h1>
+              <p className="home-hero__lead">
+               جمعية شمس للكفيف و المبصر ، فضاء للعطاء والتعاون والمبادرات التي تصنع الفرق.
+              </p>
+            </div>
 
-              <div className="home-hero__actions">
-                <a className="btn btn--primary btn--lg" href="/golden-voice">
-                  اكتشف المسابقة
-                </a>
-                <a className="btn btn--secondary btn--lg" href="/contact">
-                  تواصل معنا
-                </a>
-              </div>
-
-              <a
-                className="maps-proof"
-                href={GOOGLE_MAPS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span className="maps-proof__row">
-                  <span className="maps-proof__stars" aria-hidden="true">
-                    <StarIcon />
-                    <StarIcon />
-                    <StarIcon />
-                    <StarIcon />
-                    <StarIcon />
-                  </span>
-                  <span className="maps-proof__name">Google Maps</span>
-                </span>
-                <span className="maps-proof__meta">التقييم وعدد المراجعات قيد التحديث</span>
-                <span className="maps-proof__cta">
-                  شاهد آراء الزوار <span aria-hidden="true">←</span>
-                </span>
+            <div className="home-hero__actions">
+              <a className="btn btn--primary btn--lg" href="/membership">
+                انخرط معنا
+              </a>
+              <a className="btn btn--outline btn--lg" href="/contact">
+                تواصل معنا
               </a>
             </div>
 
-            {/* Left side in RTL: competition interest card */}
-            <div className="card home-hero__card">
-              {interestSubmitted ? (
-                <div
-                  ref={successRef}
-                  className="home-hero__success"
-                  role="status"
-                  tabIndex={-1}
-                >
-                  <span className="home-hero__success-icon" aria-hidden="true">
-                    <CheckIcon />
-                  </span>
-                  <h2 className="home-hero__success-title">تم استلام طلبك بنجاح</h2>
-                  <p className="home-hero__success-text">
-                    شكراً لك على اهتمامك بمسابقة الصوت الذهبي. سنتواصل معك عند الحاجة.
-                  </p>
-                  <button
-                    type="button"
-                    className="btn btn--outline btn--md"
-                    onClick={() => setInterestSubmitted(false)}
+            <div
+              className="home-hero__gallery"
+              role="group"
+              aria-label="صور لفريق جمعية شمس خلال أنشطتها"
+              onMouseEnter={() => setPaused(true)}
+              onMouseLeave={() => setPaused(false)}
+            >
+              {HERO_IMAGES.map((image, index) => {
+                const position = slots.indexOf(index);
+                const positionClass =
+                  position === 1 ? 'center' : position === 0 ? 'left' : 'right';
+
+                return (
+                  <div
+                    key={image.src}
+                    className={`home-hero__photo home-hero__photo--${positionClass}`}
                   >
-                    إرسال طلب آخر
-                  </button>
-                </div>
-              ) : (
-                <form className="home-hero__form" onSubmit={handleInterestSubmit}>
-                  <span className="badge badge--accent home-hero__badge">الصوت الذهبي</span>
-                  <h2 className="home-hero__card-title">هل أنت مستعد لإسماع صوتك؟</h2>
-
-                  <div className="field">
-                    <label className="field__label" htmlFor="hero-full-name">
-                      الاسم الكامل
-                      <span className="field__required" aria-hidden="true">
-                        *
-                      </span>
-                    </label>
-                    <input
-                      className="input"
-                      id="hero-full-name"
-                      name="fullName"
-                      autoComplete="name"
-                      placeholder="اكتب اسمك الكامل"
-                      required
+                    <img
+                      src={image.src}
+                      alt={image.alt}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      fetchPriority={index === 0 ? 'high' : 'auto'}
+                      decoding="async"
+                      draggable={false}
                     />
                   </div>
-
-                  <div className="field">
-                    <label className="field__label" htmlFor="hero-phone">
-                      رقم الهاتف
-                      <span className="field__required" aria-hidden="true">
-                        *
-                      </span>
-                    </label>
-                    <input
-                      className="input"
-                      id="hero-phone"
-                      name="phone"
-                      type="tel"
-                      dir="rtl"
-                      inputMode="tel"
-                      autoComplete="tel"
-                      placeholder="أدخل رقم هاتفك"
-                      required
-                    />
-                  </div>
-
-                  <button type="submit" className="btn btn--primary btn--lg btn--full">
-                    <span className="btn__label">أرغب في المشاركة</span>
-                  </button>
-                  <p className="home-hero__card-note">
-                    أدخل بياناتك لإبداء الرغبة في المشاركة في المسابقة.
-                  </p>
-                </form>
-              )}
+                );
+              })}
             </div>
           </div>
         </div>
