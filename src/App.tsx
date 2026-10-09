@@ -28,6 +28,24 @@ function ScrollToTop() {
 }
 
 /**
+ * Routes that deliberately omit the global footer. The Golden Voice
+ * registration page is a focused, single-task flow, so the footer is hidden
+ * there while every other public page keeps it.
+ */
+const FOOTER_HIDDEN_ROUTES = new Set(['/competitions/golden-voice']);
+
+/** Renders the shared footer except on routes that opt out. */
+function SiteFooter() {
+  const { pathname } = useLocation();
+
+  if (FOOTER_HIDDEN_ROUTES.has(pathname)) {
+    return null;
+  }
+
+  return <Footer />;
+}
+
+/**
  * Application root: public shell (navbar + main + footer) and the sitemap.
  * All website styles live in `src/styles.css`, imported once here.
  */
@@ -60,7 +78,7 @@ export default function App() {
           </Routes>
         </main>
 
-        <Footer />
+        <SiteFooter />
       </div>
     </BrowserRouter>
   );

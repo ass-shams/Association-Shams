@@ -133,6 +133,31 @@ describe('verifyVideo', () => {
     await expect(verifyVideo(OBJECT_PATH)).resolves.toEqual({ ok: true });
   });
 
+  it('accepts a QuickTime MOV (typical iPhone recording container)', async () => {
+    serveFixture('valid-5s.mov');
+    await expect(verifyVideo(OBJECT_PATH)).resolves.toEqual({ ok: true });
+  });
+
+  it('accepts an M4V', async () => {
+    serveFixture('valid-5s.m4v');
+    await expect(verifyVideo(OBJECT_PATH)).resolves.toEqual({ ok: true });
+  });
+
+  it('accepts a 3GP', async () => {
+    serveFixture('valid-5s.3gp');
+    await expect(verifyVideo(OBJECT_PATH)).resolves.toEqual({ ok: true });
+  });
+
+  it('accepts a Matroska MKV', async () => {
+    serveFixture('valid-5s.mkv');
+    await expect(verifyVideo(OBJECT_PATH)).resolves.toEqual({ ok: true });
+  });
+
+  it('accepts an AVI', async () => {
+    serveFixture('valid-5s.avi');
+    await expect(verifyVideo(OBJECT_PATH)).resolves.toEqual({ ok: true });
+  });
+
   it('rejects a 241-second WebM', async () => {
     serveFixture('long-241s.webm');
     const result = await verifyVideo(OBJECT_PATH);
@@ -170,6 +195,29 @@ describe('verifyVideo', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.message).toBe(VIDEO_DURATION_UNVERIFIABLE_MESSAGE);
+    }
+  });
+
+  it('validates the real container, not the object path extension', async () => {
+    // A genuine MP4 served under a `.avi` path is accepted: the bytes win.
+    serveFixture('valid-5s.mp4');
+    const result = await verifyVideo(
+      'golden-voice/123e4567-e89b-12d3-a456-426614174000.avi',
+    );
+    expect(result).toEqual({ ok: true });
+  });
+
+  it('rejects a truncated video file without crashing', async () => {
+    const full = readFileSync(path.join(FIXTURES_DIR, 'valid-5s.mp4'));
+    serve(full.subarray(0, 200));
+    const result = await verifyVideo(OBJECT_PATH);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect([
+        VIDEO_DURATION_UNVERIFIABLE_MESSAGE,
+        VIDEO_FORMAT_MESSAGE,
+      ]).toContain(result.message);
     }
   });
 

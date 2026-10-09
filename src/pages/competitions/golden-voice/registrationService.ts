@@ -1,5 +1,10 @@
 import { OTHER_REGION } from './constants';
 import type { RegionValue } from './constants';
+import {
+  getFileExtension,
+  getVideoMimeForExtension,
+  isAcceptedVideoMime,
+} from './validation';
 import type { SelectedVideo } from './types';
 
 /** Fields sent to the serverless registration endpoint. */
@@ -130,22 +135,19 @@ export function resolveUploadTotal(
 }
 
 /**
- * Resolve a bucket-allowed video MIME type. The extension is authoritative
- * because the file was already accepted as MP4/WebM, and some browsers leave
- * `file.type` empty, which would otherwise be rejected by the bucket's
- * `allowed_mime_types` check.
+ * Resolve the canonical MIME type sent to Storage. The extension is
+ * authoritative (the file was already accepted as a supported video format),
+ * which also handles browsers that report an empty `file.type` for Matroska or
+ * AVI. This value must stay within the bucket's `allowed_mime_types`.
  */
 export function resolveVideoContentType(file: File): string {
-  const extension = file.name.slice(file.name.lastIndexOf('.') + 1).toLowerCase();
-  if (extension === 'webm') {
-    return 'video/webm';
-  }
-  if (extension === 'mp4') {
-    return 'video/mp4';
+  const byExtension = getVideoMimeForExtension(getFileExtension(file.name));
+  if (byExtension) {
+    return byExtension;
   }
 
-  const type = file.type.toLowerCase();
-  return type === 'video/webm' || type === 'video/mp4' ? type : 'video/mp4';
+  const type = file.type.trim().toLowerCase();
+  return isAcceptedVideoMime(type) ? type : 'video/mp4';
 }
 
 /**
@@ -169,6 +171,7 @@ export function uploadToSignedUrlWithProgress(
   upload: SignedUpload,
   file: File,
   onPercent: (percent: number) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -185,6 +188,14 @@ export function uploadToSignedUrlWithProgress(
     xhr.setRequestHeader('x-upsert', 'false');
     xhr.setRequestHeader('cache-control', `max-age=${UPLOAD_CACHE_CONTROL}`);
     xhr.setRequestHeader('content-type', resolveVideoContentType(file));
+
+    if (signal) {
+      if (signal.aborted) {
+        reject(new Error('aborted'));
+        return;
+      }
+      signal.addEventListener('abort', () => xhr.abort(), { once: true });
+    }
 
     // Attach upload listeners before send() or no upload progress is emitted.
     xhr.upload.addEventListener(
@@ -219,11 +230,12 @@ export function uploadToSignedUrlWithProgress(
 }
 
 /** POST the registration payload and surface any safe Arabic server message. */
-async function register(payload: Record<string, unknown>): Promise<void> {
+async function register(payload: Record<string, unknown>, signal?: AbortSignal): Promise<void> {
   const response = await fetch(REGISTER_ENDPOINT, {
     method: 'POST',
     headers: JSON_HEADERS,
     body: JSON.stringify(payload),
+    signal,
   });
 
   if (!response.ok) {
@@ -248,6 +260,7 @@ export async function submitGoldenVoiceRegistration(
   values: GoldenVoiceSubmissionValues,
   video: SelectedVideo | null,
   onProgress?: OnSubmissionProgress,
+  signal?: AbortSignal,
 ): Promise<void> {
   const report = onProgress ?? (() => undefined);
 
@@ -256,18 +269,23 @@ export async function submitGoldenVoiceRegistration(
       throw new Error(VIDEO_REQUIRED_MESSAGE);
     }
 
-    const upload = await createSignedUpload(video.file.type);
+    const upload = await createSignedUpload(resolveVideoContentType(video.file));
 
     report({ phase: 'uploading', percent: 0 });
-    await uploadToSignedUrlWithProgress(upload, video.file, (percent) => {
-      report({ phase: 'uploading', percent });
-    });
+    await uploadToSignedUrlWithProgress(
+      upload,
+      video.file,
+      (percent) => {
+        report({ phase: 'uploading', percent });
+      },
+      signal,
+    );
 
     report({ phase: 'processing', percent: 100 });
-    await register({ ...values, videoPath: upload.path });
+    await register({ ...values, videoPath: upload.path }, signal);
     return;
   }
 
   report({ phase: 'processing', percent: 0 });
-  await register({ ...values });
+  await register({ ...values }, signal);
 }

@@ -28,22 +28,56 @@ export const OTHER_REGION: RegionValue = 'other';
 export const VIDEO_MAX_DURATION_SECONDS = 240;
 
 /**
- * Video formats the server is able to inspect and verify (duration + container).
- * Keep this list deliberately small and aligned with the private bucket's
- * `allowed_mime_types`. Other formats must be added here only after the
- * server-side parser is confirmed to support them.
- */
-export const ACCEPTED_VIDEO_MIME_TYPES = ['video/mp4', 'video/webm'] as const;
-
-/** File extensions matching `ACCEPTED_VIDEO_MIME_TYPES`, used for validation. */
-export const ACCEPTED_VIDEO_EXTENSIONS = ['mp4', 'webm'] as const;
-
-/**
  * Maximum accepted video size in bytes (200 MB). Chosen as a generous ceiling
  * for a short performance video while keeping server-side processing bounded.
  * Override on the server with `GOLDEN_VOICE_MAX_VIDEO_BYTES`.
  */
 export const VIDEO_MAX_BYTES = 200 * 1024 * 1024;
 
-/** Value for the file input `accept` attribute. */
-export const ACCEPT_VIDEO_ATTRIBUTE = ACCEPTED_VIDEO_MIME_TYPES.join(',');
+/**
+ * Video containers the server can inspect for structure and duration, mapped to
+ * the canonical MIME type and file extension used across the app.
+ *
+ * `video/x-matroska` and `video/x-msvideo` are the conventional MIME types for
+ * Matroska and AVI; some browsers report an empty type for them, which is why
+ * the extension is also part of the acceptance check.
+ *
+ * MPEG program/transport streams (`.mpeg`, `.mpg`) are intentionally excluded:
+ * their duration cannot be read reliably from the container without decoding,
+ * so they are rejected instead of being silently accepted.
+ */
+export const VIDEO_FORMATS = [
+  { mime: 'video/mp4', extension: 'mp4' },
+  { mime: 'video/quicktime', extension: 'mov' },
+  { mime: 'video/x-m4v', extension: 'm4v' },
+  { mime: 'video/3gpp', extension: '3gp' },
+  { mime: 'video/3gpp2', extension: '3g2' },
+  { mime: 'video/webm', extension: 'webm' },
+  { mime: 'video/x-matroska', extension: 'mkv' },
+  { mime: 'video/x-msvideo', extension: 'avi' },
+] as const;
+
+export type VideoMimeType = (typeof VIDEO_FORMATS)[number]['mime'];
+export type VideoExtension = (typeof VIDEO_FORMATS)[number]['extension'];
+
+/** Canonical MIME types accepted by the browser and the upload endpoint. */
+export const ACCEPTED_VIDEO_MIME_TYPES: readonly string[] = VIDEO_FORMATS.map(
+  (format) => format.mime,
+);
+
+/** File extensions matching `ACCEPTED_VIDEO_MIME_TYPES`. */
+export const ACCEPTED_VIDEO_EXTENSIONS: readonly string[] = VIDEO_FORMATS.map(
+  (format) => format.extension,
+);
+
+/** Value for the file input `accept` attribute (MIME types and extensions). */
+export const ACCEPT_VIDEO_ATTRIBUTE = [
+  ...ACCEPTED_VIDEO_MIME_TYPES,
+  ...ACCEPTED_VIDEO_EXTENSIONS.map((extension) => `.${extension}`),
+].join(',');
+
+/** Human-readable list of supported formats for participant instructions. */
+export const SUPPORTED_FORMATS_LABEL = 'MP4، MOV، M4V، 3GP، WebM، MKV، AVI';
+
+/** Maximum file size rounded to whole megabytes, for participant instructions. */
+export const VIDEO_MAX_MB_LABEL = `${Math.round(VIDEO_MAX_BYTES / (1024 * 1024))} ميغابايت`;

@@ -45,6 +45,33 @@ If you prefer the Dashboard: **Storage → New bucket**, name it
 `golden-voice-videos`, keep **Public bucket** disabled, then set the file size
 limit and allowed MIME types.
 
+### Required manual change: allow the additional video formats
+
+The application now validates and stores **MP4, MOV, M4V, 3GP, 3G2, WebM, MKV,
+AVI**, but the existing bucket migration only allows `video/mp4` and
+`video/webm`. **Until the bucket is updated, MOV/M4V/3GP/3G2/MKV/AVI uploads
+will be rejected by Storage.** This is a manual change (migrations are not
+edited automatically):
+
+```sql
+update storage.buckets
+set allowed_mime_types = array[
+  'video/mp4',
+  'video/quicktime',
+  'video/x-m4v',
+  'video/3gpp',
+  'video/3gpp2',
+  'video/webm',
+  'video/x-matroska',
+  'video/x-msvideo'
+]
+where id = 'golden-voice-videos';
+```
+
+Or in the Dashboard: **Storage → golden-voice-videos → Settings**, add the same
+MIME types to **Allowed MIME types**. The file size limit (200 MB) is unchanged
+and already matches `VIDEO_MAX_BYTES`.
+
 ### Storage policies
 
 No Storage policy is created for `anon` or `authenticated`. With RLS enabled
@@ -61,8 +88,8 @@ Because Vercel Functions cap request bodies at 4.5 MB, videos are uploaded
 directly to the private bucket. The flow is:
 
 1. `POST /api/golden-voice/uploads` — generates a non-guessable object path
-   (`golden-voice/<uuid>.<mp4|webm>`) and returns a scoped signed upload URL.
-   For `beni_mellal_khenifra` it returns `videoPath: null` (no upload).
+   (`golden-voice/<uuid>.<ext>`) and returns a scoped signed upload URL. For
+   `beni_mellal_khenifra` it returns `videoPath: null` (no upload).
 2. Browser uploads the video directly to Storage via the signed URL.
 3. `POST /api/golden-voice/register` — validates the fields, checks the object
    path format, and (for the video case) streams the object to verify its
@@ -70,18 +97,30 @@ directly to the private bucket. The flow is:
    Beni Mellal-Khenifra register without a video.
 
 Uploaded videos are streamed and only their structural metadata is buffered
-(MP4 `moov` / WebM `Info`), so function memory stays bounded regardless of file
-size. `register` sets `maxDuration = 60`.
+(ISOBMFF `moov` / EBML `Info` / AVI `avih`), so function memory stays bounded
+regardless of file size. `register` sets `maxDuration = 60`.
 
 ### Video rules
 
-- Accepted formats: **MP4** and **WebM** only.
+- Accepted formats (by real container structure, not the filename):
+  **MP4, MOV/QuickTime, M4V, 3GP, 3G2, WebM, MKV, AVI**.
+- Codecs: containers are validated, not decoded. H.264/AVC, HEVC/H.265, VP8,
+  VP9, MPEG-4 Part 2 and others inside a supported container are stored as-is.
+  Browser *playback* is not required for registration, so a codec that a given
+  browser cannot preview (e.g. HEVC) is still accepted if its container and
+  duration are valid.
+- **MPEG program/transport streams (`.mpeg`, `.mpg`) are not supported**: their
+  duration cannot be read reliably from the container without decoding, so they
+  are rejected with a clear message instead of being silently accepted.
 - Duration: the website asks for a maximum of **3 minutes**; the server accepts
-  up to **240 seconds (4 minutes)** and rejects anything longer.
-- Duration is always read from the file's container metadata on the server; a
-  duration supplied by the browser is never trusted.
-- Images renamed to a video extension, invalid files, and files whose duration
-  cannot be read are rejected with clear Arabic messages.
+  up to **240 seconds (4 minutes)** and rejects anything longer. Duration is
+  always read from the container metadata on the server; a browser-supplied
+  value is never trusted.
+- Images renamed to a video extension, malformed/truncated files, and files
+  whose duration cannot be read are rejected with clear Arabic messages.
+- Files that the browser cannot decode (some AVI/MKV on some devices) are still
+  selectable: the client treats the duration as unknown and lets the server
+  validate it.
 
 ## 4. Environment variables
 

@@ -70,7 +70,7 @@ describe('POST /api/golden-voice/uploads', () => {
   });
 
   it('rejects an unsupported video format', async () => {
-    const result = await call({ region: 'other', contentType: 'video/quicktime' });
+    const result = await call({ region: 'other', contentType: 'video/mpeg' });
     expect(result.status).toBe(415);
   });
 
@@ -85,11 +85,22 @@ describe('POST /api/golden-voice/uploads', () => {
     );
   });
 
-  it('uses the WebM extension for WebM uploads', async () => {
-    const result = await call({ region: 'other', contentType: 'video/webm' });
+  it('issues signed URLs with the correct extension for every supported format', async () => {
+    const cases: [string, string][] = [
+      ['video/quicktime', 'mov'],
+      ['video/x-m4v', 'm4v'],
+      ['video/3gpp', '3gp'],
+      ['video/3gpp2', '3g2'],
+      ['video/webm', 'webm'],
+      ['video/x-matroska', 'mkv'],
+      ['video/x-msvideo', 'avi'],
+    ];
 
-    expect(result.status).toBe(200);
-    expect(String(result.json?.path)).toMatch(/\.webm$/);
+    for (const [contentType, extension] of cases) {
+      const result = await call({ region: 'other', contentType });
+      expect(result.status, contentType).toBe(200);
+      expect(String(result.json?.path), contentType).toMatch(new RegExp(`\\.${extension}$`));
+    }
   });
 
   it('returns a server error when the signed URL cannot be created', async () => {

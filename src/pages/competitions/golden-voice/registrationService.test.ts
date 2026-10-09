@@ -51,6 +51,10 @@ class FakeXMLHttpRequest {
     this.body = body;
     FakeXMLHttpRequest.instances.push(this);
   }
+
+  abort(): void {
+    this.onabort?.();
+  }
 }
 
 const UPLOAD = { bucket: 'golden-voice-videos', path: 'golden-voice/abc.mp4', token: 'tok' };
@@ -89,22 +93,28 @@ describe('buildSignedUploadUrl', () => {
 });
 
 describe('resolveVideoContentType', () => {
-  it('maps mp4/webm files to bucket-allowed MIME types by extension', () => {
+  it('maps supported extensions to canonical MIME types, even with an empty type', () => {
     expect(resolveVideoContentType(new File([], 'clip.mp4', { type: 'video/mp4' }))).toBe(
       'video/mp4',
     );
     expect(resolveVideoContentType(new File([], 'clip.MP4', {}))).toBe('video/mp4');
+    expect(resolveVideoContentType(new File([], 'clip.mov', { type: 'video/quicktime' }))).toBe(
+      'video/quicktime',
+    );
+    expect(resolveVideoContentType(new File([], 'clip.M4V', {}))).toBe('video/x-m4v');
+    expect(resolveVideoContentType(new File([], 'clip.3gp', {}))).toBe('video/3gpp');
+    expect(resolveVideoContentType(new File([], 'clip.mkv', {}))).toBe('video/x-matroska');
+    expect(resolveVideoContentType(new File([], 'clip.avi', {}))).toBe('video/x-msvideo');
     expect(resolveVideoContentType(new File([], 'clip.webm', { type: 'video/webm' }))).toBe(
       'video/webm',
     );
-    expect(resolveVideoContentType(new File([], 'clip.WEBM', {}))).toBe('video/webm');
   });
 
   it('falls back to the file type, then to mp4', () => {
     expect(resolveVideoContentType(new File([], 'noext', { type: 'video/webm' }))).toBe(
       'video/webm',
     );
-    expect(resolveVideoContentType(new File([], 'clip.mov', { type: 'video/quicktime' }))).toBe(
+    expect(resolveVideoContentType(new File([], 'noext', { type: 'application/octet-stream' }))).toBe(
       'video/mp4',
     );
   });
@@ -201,6 +211,19 @@ describe('uploadToSignedUrlWithProgress', () => {
 
     xhr.status = 400;
     xhr.onload?.();
+
+    await expect(promise).rejects.toThrow();
+  });
+
+  it('aborts the upload when the signal is aborted', async () => {
+    const file = new File([new Uint8Array(64)], 'clip.mov', { type: 'video/quicktime' });
+    const controller = new AbortController();
+    const promise = uploadToSignedUrlWithProgress(UPLOAD, file, () => undefined, controller.signal);
+
+    const xhr = FakeXMLHttpRequest.instances[0];
+    expect(xhr.headers['content-type']).toBe('video/quicktime');
+
+    controller.abort();
 
     await expect(promise).rejects.toThrow();
   });

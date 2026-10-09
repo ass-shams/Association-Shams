@@ -1,19 +1,14 @@
 /**
- * Minimal, dependency-free media duration extraction for the two accepted
- * containers (MP4 / ISOBMFF and WebM / Matroska).
+ * Minimal, dependency-free media duration extraction for the supported
+ * container families:
+ * - MP4 / MOV / M4V / 3GP / 3G2 (ISOBMFF) via `moov > mvhd`.
+ * - WebM / Matroska (EBML) via `Segment > Info`.
+ * - AVI (RIFF) via `hdrl > avih`.
  *
  * The serverless runtime has no FFmpeg binary, so duration is read directly
  * from the container metadata rather than trusting the browser. These parsers
  * only read declared structural values and never decode media.
  */
-
-/** Resolve a duration in seconds for the given container, or null if unknown. */
-export function extractDurationSeconds(
-  bytes: Uint8Array,
-  container: 'mp4' | 'webm',
-): number | null {
-  return container === 'webm' ? getWebmDurationSeconds(bytes) : getMp4DurationSeconds(bytes);
-}
 
 function readUint32(bytes: Uint8Array, offset: number): number | null {
   if (offset < 0 || offset + 4 > bytes.length) {
@@ -341,5 +336,45 @@ export function getWebmDurationFromInfo(info: Uint8Array): number | null {
   }
 
   const seconds = (durationValue * timecodeScale) / 1e9;
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : null;
+}
+
+function readUint32LE(bytes: Uint8Array, offset: number): number | null {
+  if (offset < 0 || offset + 4 > bytes.length) {
+    return null;
+  }
+
+  return (
+    bytes[offset] +
+    (bytes[offset + 1] << 8) +
+    (bytes[offset + 2] << 16) +
+    bytes[offset + 3] * 0x1000000
+  );
+}
+
+/**
+ * Duration from an AVI `hdrl > avih` (MainAVIHeader) payload, in seconds.
+ *
+ * `dwMicroSecPerFrame` (offset 0) and `dwTotalFrames` (offset 16) are the only
+ * fields needed. Files that store `dwTotalFrames = 0` (some OpenDML/`dmlh`
+ * files) yield null and are reported as unverifiable rather than guessed.
+ */
+export function getAviDurationFromAvih(avih: Uint8Array): number | null {
+  if (avih.length < 20) {
+    return null;
+  }
+
+  const microSecPerFrame = readUint32LE(avih, 0);
+  const totalFrames = readUint32LE(avih, 16);
+
+  if (microSecPerFrame === null || totalFrames === null) {
+    return null;
+  }
+
+  if (microSecPerFrame <= 0 || totalFrames <= 0) {
+    return null;
+  }
+
+  const seconds = (microSecPerFrame * totalFrames) / 1_000_000;
   return Number.isFinite(seconds) && seconds > 0 ? seconds : null;
 }

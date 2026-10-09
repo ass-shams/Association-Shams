@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getVideoExtensionForMime,
+  getVideoMimeForExtension,
   isAcceptedVideoFile,
   isAcceptedVideoMime,
   isRegionValue,
@@ -102,18 +104,44 @@ describe('region helpers', () => {
 });
 
 describe('video helpers', () => {
-  it('accepts only MP4 and WebM', () => {
-    expect(isAcceptedVideoMime('video/mp4')).toBe(true);
-    expect(isAcceptedVideoMime('VIDEO/WEBM')).toBe(true);
-    expect(isAcceptedVideoMime('video/quicktime')).toBe(false);
+  it('accepts the supported container MIME types', () => {
+    for (const mime of [
+      'video/mp4',
+      'video/quicktime',
+      'video/x-m4v',
+      'video/3gpp',
+      'video/3gpp2',
+      'VIDEO/WEBM',
+      'video/x-matroska',
+      'video/x-msvideo',
+    ]) {
+      expect(isAcceptedVideoMime(mime), mime).toBe(true);
+    }
+
+    expect(isAcceptedVideoMime('video/mpeg')).toBe(false);
+    expect(isAcceptedVideoMime('image/png')).toBe(false);
     expect(isAcceptedVideoMime('')).toBe(false);
   });
 
   it('falls back to the extension when the MIME type is missing', () => {
     expect(isAcceptedVideoFile('performance.mp4', '')).toBe(true);
-    expect(isAcceptedVideoFile('performance.webm', '')).toBe(true);
+    expect(isAcceptedVideoFile('clip.mov', '')).toBe(true);
+    expect(isAcceptedVideoFile('clip.mkv', '')).toBe(true);
+    expect(isAcceptedVideoFile('clip.avi', '')).toBe(true);
     expect(isAcceptedVideoFile('performance', 'video/webm')).toBe(true);
-    expect(isAcceptedVideoFile('performance.avi', 'video/x-msvideo')).toBe(false);
+    expect(isAcceptedVideoFile('clip.avi', 'video/x-msvideo')).toBe(true);
+    expect(isAcceptedVideoFile('clip.mpeg', '')).toBe(false);
+    expect(isAcceptedVideoFile('image.png', 'image/png')).toBe(false);
+  });
+
+  it('maps extensions to canonical MIME types and back', () => {
+    expect(getVideoMimeForExtension('MOV')).toBe('video/quicktime');
+    expect(getVideoMimeForExtension('mkv')).toBe('video/x-matroska');
+    expect(getVideoMimeForExtension('mpeg')).toBeNull();
+
+    expect(getVideoExtensionForMime('video/x-msvideo')).toBe('avi');
+    expect(getVideoExtensionForMime('VIDEO/3GPP')).toBe('3gp');
+    expect(getVideoExtensionForMime('video/mpeg')).toBeNull();
   });
 
   it('accepts durations up to the 240-second server limit', () => {

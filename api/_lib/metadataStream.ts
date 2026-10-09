@@ -8,7 +8,13 @@
  * downloaded chunk plus the metadata cap.
  */
 
-export type VideoContainer = 'mp4' | 'webm';
+/**
+ * Container families the server can inspect:
+ * - `isobmff`: MP4, MOV/QuickTime, M4V, 3GP/3G2 (all share the `ftyp` box).
+ * - `ebml`: WebM and Matroska (MKV).
+ * - `avi`: RIFF/AVI.
+ */
+export type VideoContainer = 'isobmff' | 'ebml' | 'avi';
 
 /** Thrown when the stream exceeds the configured maximum object size. */
 export class VideoTooLargeError extends Error {
@@ -18,8 +24,13 @@ export class VideoTooLargeError extends Error {
   }
 }
 
-/** Detect the real container from the first bytes of the object. */
+/**
+ * Detect the real container from the first bytes of the object. This is the
+ * security boundary: the filename extension and the browser MIME type are never
+ * trusted on their own.
+ */
 export function detectContainer(head: Uint8Array): VideoContainer | null {
+  // ISOBMFF: a `ftyp` box at bytes 4–7 (MP4, MOV, M4V, 3GP, 3G2).
   if (
     head.length >= 12 &&
     head[4] === 0x66 &&
@@ -27,9 +38,10 @@ export function detectContainer(head: Uint8Array): VideoContainer | null {
     head[6] === 0x79 &&
     head[7] === 0x70
   ) {
-    return 'mp4';
+    return 'isobmff';
   }
 
+  // EBML magic (WebM / Matroska).
   if (
     head.length >= 4 &&
     head[0] === 0x1a &&
@@ -37,7 +49,22 @@ export function detectContainer(head: Uint8Array): VideoContainer | null {
     head[2] === 0xdf &&
     head[3] === 0xa3
   ) {
-    return 'webm';
+    return 'ebml';
+  }
+
+  // RIFF/AVI: 'RIFF' .... 'AVI '.
+  if (
+    head.length >= 12 &&
+    head[0] === 0x52 &&
+    head[1] === 0x49 &&
+    head[2] === 0x46 &&
+    head[3] === 0x46 &&
+    head[8] === 0x41 &&
+    head[9] === 0x56 &&
+    head[10] === 0x49 &&
+    head[11] === 0x20
+  ) {
+    return 'avi';
   }
 
   return null;
@@ -427,6 +454,123 @@ export async function collectWebmMetadata(
     if (Number.isFinite(remaining)) {
       remaining -= skipped;
     }
+  }
+
+  return null;
+}
+
+function readUint32LE(bytes: Uint8Array, offset: number): number | null {
+  if (offset + 4 > bytes.length) {
+    return null;
+  }
+  return (
+    bytes[offset] +
+    (bytes[offset + 1] << 8) +
+    (bytes[offset + 2] << 16) +
+    bytes[offset + 3] * 0x1000000
+  );
+}
+
+/** RIFF chunks are word-aligned; odd sizes carry one padding byte. */
+function padEven(size: number): number {
+  return size + (size % 2);
+}
+
+/**
+ * Walk a RIFF/AVI file and return the `hdrl > avih` payload (the main AVI
+ * header), discarding `movi` and other media chunks without buffering them.
+ */
+export async function collectAviMetadata(
+  reader: ByteReader,
+  maxMetadataBytes: number,
+): Promise<Uint8Array | null> {
+  const header = await reader.readExact(12);
+  if (!header || header.length < 12) {
+    return null;
+  }
+
+  if (ascii4(header, 0) !== 'RIFF' || ascii4(header, 8) !== 'AVI ') {
+    return null;
+  }
+
+  for (let guard = 0; guard < 100_000; guard += 1) {
+    const chunkHeader = await reader.readExact(8);
+    if (!chunkHeader || chunkHeader.length < 8) {
+      return null;
+    }
+
+    const id = ascii4(chunkHeader, 0);
+    const size = readUint32LE(chunkHeader, 4);
+    if (size === null) {
+      return null;
+    }
+
+    if (id === 'LIST') {
+      const listType = await reader.readExact(4);
+      if (!listType || listType.length < 4) {
+        return null;
+      }
+
+      if (ascii4(listType, 0) === 'hdrl') {
+        return findAviHeader(reader, size - 4, maxMetadataBytes);
+      }
+
+      const skip = padEven(size - 4);
+      if ((await reader.discardExact(skip)) < skip) {
+        return null;
+      }
+      continue;
+    }
+
+    if (id === 'avih') {
+      if (size < 20 || size > maxMetadataBytes) {
+        return null;
+      }
+      const avih = await reader.readExact(size);
+      return avih && avih.length === size ? avih : null;
+    }
+
+    const skip = padEven(size);
+    if ((await reader.discardExact(skip)) < skip) {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+async function findAviHeader(
+  reader: ByteReader,
+  hdrlSize: number,
+  maxMetadataBytes: number,
+): Promise<Uint8Array | null> {
+  let remaining = hdrlSize;
+
+  while (remaining >= 8) {
+    const subHeader = await reader.readExact(8);
+    if (!subHeader || subHeader.length < 8) {
+      return null;
+    }
+
+    const id = ascii4(subHeader, 0);
+    const size = readUint32LE(subHeader, 4);
+    if (size === null) {
+      return null;
+    }
+
+    if (id === 'avih') {
+      if (size < 20 || size > maxMetadataBytes) {
+        return null;
+      }
+      const avih = await reader.readExact(size);
+      return avih && avih.length === size ? avih : null;
+    }
+
+    const skip = padEven(size);
+    if ((await reader.discardExact(skip)) < skip) {
+      return null;
+    }
+    remaining -= 8 + skip;
   }
 
   return null;

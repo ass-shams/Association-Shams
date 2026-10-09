@@ -2,9 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { getMp4DurationFromMoov, getWebmDurationFromInfo } from './mediaDuration.js';
+import {
+  getAviDurationFromAvih,
+  getMp4DurationFromMoov,
+  getWebmDurationFromInfo,
+} from './mediaDuration.js';
 import {
   VideoTooLargeError,
+  collectAviMetadata,
   collectMp4Metadata,
   collectWebmMetadata,
   createByteReader,
@@ -72,12 +77,19 @@ function buildMp4(mdatPayloadBytes: number, durationSeconds: number): Uint8Array
   return out;
 }
 
+function fixtureHead(name: string): Uint8Array {
+  return readFileSync(path.join(FIXTURES_DIR, name)).subarray(0, 12);
+}
+
 describe('detectContainer', () => {
-  it('recognises MP4 and WebM magic bytes', () => {
-    expect(detectContainer(buildMp4(0, 5).subarray(0, 12))).toBe('mp4');
-    expect(detectContainer(readFileSync(path.join(FIXTURES_DIR, 'valid-5s.webm')).subarray(0, 12))).toBe(
-      'webm',
-    );
+  it('recognises ISOBMFF (MP4/MOV/M4V/3GP), EBML (WebM/MKV) and RIFF/AVI', () => {
+    expect(detectContainer(buildMp4(0, 5).subarray(0, 12))).toBe('isobmff');
+    expect(detectContainer(fixtureHead('valid-5s.mov'))).toBe('isobmff');
+    expect(detectContainer(fixtureHead('valid-5s.m4v'))).toBe('isobmff');
+    expect(detectContainer(fixtureHead('valid-5s.3gp'))).toBe('isobmff');
+    expect(detectContainer(fixtureHead('valid-5s.webm'))).toBe('ebml');
+    expect(detectContainer(fixtureHead('valid-5s.mkv'))).toBe('ebml');
+    expect(detectContainer(fixtureHead('valid-5s.avi'))).toBe('avi');
   });
 
   it('rejects unrelated bytes', () => {
@@ -91,7 +103,7 @@ describe('streaming metadata collection', () => {
     const reader = createByteReader(streamFrom(file), file.length);
 
     const head = await reader.peek(12);
-    expect(detectContainer(head ?? new Uint8Array())).toBe('mp4');
+    expect(detectContainer(head ?? new Uint8Array())).toBe('isobmff');
 
     const moov = await collectMp4Metadata(reader, 16 * 1024 * 1024);
     await reader.cancel();
@@ -110,6 +122,27 @@ describe('streaming metadata collection', () => {
     expect(info).not.toBeNull();
     expect(info?.length).toBeLessThan(4096);
     expect(getWebmDurationFromInfo(info as Uint8Array)).toBeCloseTo(5, 0);
+  });
+
+  it('extracts the Matroska Info element (same EBML layout as WebM)', async () => {
+    const file = readFileSync(path.join(FIXTURES_DIR, 'valid-5s.mkv'));
+    const reader = createByteReader(streamFrom(file), file.length);
+    const info = await collectWebmMetadata(reader, 16 * 1024 * 1024);
+    await reader.cancel();
+
+    expect(info).not.toBeNull();
+    expect(getWebmDurationFromInfo(info as Uint8Array)).toBeCloseTo(5, 0);
+  });
+
+  it('extracts the AVI avih header from the fixture', async () => {
+    const file = readFileSync(path.join(FIXTURES_DIR, 'valid-5s.avi'));
+    const reader = createByteReader(streamFrom(file), file.length);
+    const avih = await collectAviMetadata(reader, 16 * 1024 * 1024);
+    await reader.cancel();
+
+    expect(avih).not.toBeNull();
+    expect(avih?.length).toBeGreaterThanOrEqual(20);
+    expect(getAviDurationFromAvih(avih as Uint8Array)).toBeCloseTo(5, 1);
   });
 
   it('aborts once the stream exceeds the maximum size', async () => {

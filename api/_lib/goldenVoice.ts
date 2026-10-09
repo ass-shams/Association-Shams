@@ -1,13 +1,22 @@
 import { getSupabaseAdmin } from './supabaseAdmin.js';
-import { getMp4DurationFromMoov, getWebmDurationFromInfo } from './mediaDuration.js';
+import {
+  getAviDurationFromAvih,
+  getMp4DurationFromMoov,
+  getWebmDurationFromInfo,
+} from './mediaDuration.js';
 import {
   VideoTooLargeError,
+  collectAviMetadata,
   collectMp4Metadata,
   collectWebmMetadata,
   createByteReader,
   detectContainer,
 } from './metadataStream.js';
-import { VIDEO_MAX_BYTES, VIDEO_MAX_DURATION_SECONDS } from '../../src/pages/competitions/golden-voice/constants.js';
+import {
+  ACCEPTED_VIDEO_EXTENSIONS,
+  VIDEO_MAX_BYTES,
+  VIDEO_MAX_DURATION_SECONDS,
+} from '../../src/pages/competitions/golden-voice/constants.js';
 import {
   VIDEO_DURATION_UNVERIFIABLE_MESSAGE,
   VIDEO_FORMAT_MESSAGE,
@@ -36,9 +45,10 @@ const MAX_METADATA_BYTES = 16 * 1024 * 1024;
 /** Configurable maximum accepted video size, defaulting to the shared limit. */
 const MAX_VIDEO_BYTES = resolveMaxBytes(process.env.GOLDEN_VOICE_MAX_VIDEO_BYTES);
 
-/** Server-generated object paths: `golden-voice/<uuid>.<mp4|webm>`. */
-const VIDEO_PATH_PATTERN =
-  /^golden-voice\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(mp4|webm)$/;
+/** Server-generated object paths: `golden-voice/<uuid>.<supported-extension>`. */
+const VIDEO_PATH_PATTERN = new RegExp(
+  `^golden-voice/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(${ACCEPTED_VIDEO_EXTENSIONS.join('|')})$`,
+);
 
 function resolveMaxBytes(raw: string | undefined): number {
   if (!raw) {
@@ -127,9 +137,11 @@ export async function verifyVideo(path: string): Promise<VideoVerification> {
     }
 
     const metadata =
-      container === 'webm'
+      container === 'ebml'
         ? await collectWebmMetadata(reader, MAX_METADATA_BYTES)
-        : await collectMp4Metadata(reader, MAX_METADATA_BYTES);
+        : container === 'avi'
+          ? await collectAviMetadata(reader, MAX_METADATA_BYTES)
+          : await collectMp4Metadata(reader, MAX_METADATA_BYTES);
 
     await reader.cancel();
 
@@ -138,7 +150,11 @@ export async function verifyVideo(path: string): Promise<VideoVerification> {
     }
 
     const duration =
-      container === 'webm' ? getWebmDurationFromInfo(metadata) : getMp4DurationFromMoov(metadata);
+      container === 'ebml'
+        ? getWebmDurationFromInfo(metadata)
+        : container === 'avi'
+          ? getAviDurationFromAvih(metadata)
+          : getMp4DurationFromMoov(metadata);
 
     if (duration === null) {
       return { ok: false, message: VIDEO_DURATION_UNVERIFIABLE_MESSAGE };

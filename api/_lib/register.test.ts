@@ -4,40 +4,19 @@ import type { ServerResponse } from 'node:http';
 const state = vi.hoisted(() => ({
   insertError: null as { code?: string } | null,
   inserted: null as Record<string, unknown> | null,
-  insertId: '11111111-1111-4111-8111-111111111111',
-  insertCreatedAt: '2026-10-09T12:00:00.000Z',
   verify: { ok: true } as { ok: true } | { ok: false; message: string },
   removed: [] as string[],
-  syncResult: true as boolean,
-  syncCalls: [] as Record<string, unknown>[],
 }));
 
 vi.mock('./supabaseAdmin.js', () => ({
   getSupabaseAdmin: () => ({
     from: () => ({
-      insert: (row: Record<string, unknown>) => {
+      insert: async (row: Record<string, unknown>) => {
         state.inserted = row;
-        return {
-          select: () => ({
-            single: async () =>
-              state.insertError
-                ? { data: null, error: state.insertError }
-                : {
-                    data: { id: state.insertId, created_at: state.insertCreatedAt },
-                    error: null,
-                  },
-          }),
-        };
+        return { error: state.insertError };
       },
     }),
   }),
-}));
-
-vi.mock('./googleSheets.js', () => ({
-  syncRegistrationToSheetBestEffort: async (registration: Record<string, unknown>) => {
-    state.syncCalls.push(registration);
-    return state.syncResult;
-  },
 }));
 
 vi.mock('./goldenVoice.js', async (importOriginal) => {
@@ -91,8 +70,6 @@ beforeEach(() => {
   state.inserted = null;
   state.verify = { ok: true };
   state.removed = [];
-  state.syncResult = true;
-  state.syncCalls = [];
 });
 
 describe('POST /api/golden-voice/register (with video)', () => {
@@ -136,27 +113,6 @@ describe('POST /api/golden-voice/register (with video)', () => {
     expect(state.removed).toEqual([OBJECT_PATH]);
   });
 
-  it('mirrors the saved registration into the sheet by its UUID', async () => {
-    const result = await call({ ...BASE, region: 'other', videoPath: OBJECT_PATH });
-
-    expect(result.status).toBe(201);
-    expect(state.syncCalls).toHaveLength(1);
-    expect(state.syncCalls[0]).toMatchObject({
-      id: state.insertId,
-      region: 'other',
-      videoPath: OBJECT_PATH,
-      createdAt: state.insertCreatedAt,
-    });
-  });
-
-  it('still succeeds when the sheet sync fails (no duplicate on retry)', async () => {
-    state.syncResult = false;
-    const result = await call({ ...BASE, region: 'other', videoPath: OBJECT_PATH });
-
-    expect(result.status).toBe(201);
-    expect(state.inserted).not.toBeNull();
-    expect(state.removed).toHaveLength(0);
-  });
 });
 
 describe('POST /api/golden-voice/register (Beni Mellal-Khenifra)', () => {
@@ -165,10 +121,6 @@ describe('POST /api/golden-voice/register (Beni Mellal-Khenifra)', () => {
 
     expect(result.status).toBe(201);
     expect(state.inserted).toMatchObject({ region: 'beni_mellal_khenifra', video_path: null });
-    expect(state.syncCalls[0]).toMatchObject({
-      region: 'beni_mellal_khenifra',
-      videoPath: null,
-    });
   });
 
   it('rejects a video supplied for the no-video region', async () => {

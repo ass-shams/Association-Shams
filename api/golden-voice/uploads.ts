@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { GOLDEN_VOICE_BUCKET, VIDEO_PATH_PREFIX, readJsonBody } from '../_lib/goldenVoice.js';
 import { OTHER_REGION } from '../../src/pages/competitions/golden-voice/constants.js';
 import {
-  isAcceptedVideoMime,
+  getVideoExtensionForMime,
   isRegionValue,
   VIDEO_FORMAT_MESSAGE,
 } from '../../src/pages/competitions/golden-voice/validation.js';
@@ -39,11 +39,11 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
   const contentType =
     typeof body?.contentType === 'string' ? body.contentType.trim().toLowerCase() : '';
 
-  if (!isAcceptedVideoMime(contentType)) {
+  const extension = getVideoExtensionForMime(contentType);
+  if (!extension) {
     return sendJson(res, 415, { message: VIDEO_FORMAT_MESSAGE });
   }
 
-  const extension = contentType === 'video/webm' ? 'webm' : 'mp4';
   const objectPath = `${VIDEO_PATH_PREFIX}/${randomUUID()}.${extension}`;
 
   try {

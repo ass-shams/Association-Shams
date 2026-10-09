@@ -1,6 +1,10 @@
 import { useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { ACCEPT_VIDEO_ATTRIBUTE } from '../constants';
+import {
+  ACCEPT_VIDEO_ATTRIBUTE,
+  SUPPORTED_FORMATS_LABEL,
+  VIDEO_MAX_MB_LABEL,
+} from '../constants';
 import {
   formatDuration,
   formatFileSize,
@@ -8,7 +12,6 @@ import {
   isVideoDurationValid,
   VIDEO_FORMAT_MESSAGE,
   VIDEO_TOO_LONG_MESSAGE,
-  VIDEO_UNREADABLE_MESSAGE,
 } from '../validation';
 import type { SelectedVideo } from '../types';
 
@@ -114,18 +117,23 @@ export default function VideoUploadField({
     onErrorChange('');
 
     try {
-      const durationSeconds = await readVideoDuration(file);
+      let durationSeconds: number | null = null;
+      try {
+        durationSeconds = await readVideoDuration(file);
+      } catch {
+        // The browser cannot decode this container/codec (some AVI/MKV files
+        // on some devices). Do not block: the server validates the real
+        // duration and rejects anything invalid.
+        durationSeconds = null;
+      }
 
-      if (!isVideoDurationValid(durationSeconds)) {
+      if (durationSeconds !== null && !isVideoDurationValid(durationSeconds)) {
         onChange(null);
         onErrorChange(VIDEO_TOO_LONG_MESSAGE);
         return;
       }
 
       onChange({ file, durationSeconds });
-    } catch {
-      onChange(null);
-      onErrorChange(VIDEO_UNREADABLE_MESSAGE);
     } finally {
       setIsChecking(false);
     }
@@ -149,8 +157,8 @@ export default function VideoUploadField({
       </span>
 
       <p className="gv-video__note">
-        إذا كنت من خارج جهة بني ملال خنيفرة، فيجب إرفاق فيديو للمشاركة لا تتجاوز مدته ثلاث
-        دقائق.
+        إذا كنت من خارج جهة بني ملال خنيفرة، فيجب إرفاق فيديو للمشاركة. الصيغ المدعومة:{' '}
+        {SUPPORTED_FORMATS_LABEL}. الحد الأقصى للحجم {VIDEO_MAX_MB_LABEL} والمدة ثلاث دقائق.
       </p>
 
       <input
@@ -176,7 +184,10 @@ export default function VideoUploadField({
               {value.file.name}
             </p>
             <p className="gv-video__details">
-              {formatFileSize(value.file.size)} · المدة {formatDuration(value.durationSeconds)}
+              {formatFileSize(value.file.size)}
+              {value.durationSeconds !== null
+                ? ` · المدة ${formatDuration(value.durationSeconds)}`
+                : ''}
             </p>
           </div>
 
@@ -201,7 +212,9 @@ export default function VideoUploadField({
           <span className="gv-video__dropzone-title">
             {isChecking ? 'جارٍ التحقق من الفيديو…' : 'رفع فيديو المشاركة'}
           </span>
-          <span className="gv-video__dropzone-help">يجب ألا تتجاوز مدة الفيديو ثلاث دقائق.</span>
+          <span className="gv-video__dropzone-help">
+            {SUPPORTED_FORMATS_LABEL} · حتى {VIDEO_MAX_MB_LABEL} · 3 دقائق
+          </span>
         </label>
       )}
 

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import RegistrationField from './RegistrationField';
 import RegionField from './RegionField';
@@ -83,9 +83,18 @@ export default function GoldenVoiceRegistrationForm() {
   const [progress, setProgress] = useState(0);
   const [submitError, setSubmitError] = useState('');
   const submittingRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   const isOtherRegion = values.region === OTHER_REGION;
   const isSubmitting = phase !== 'idle';
+
+  // Abort an in-flight upload/registration if the visitor leaves the page, so
+  // an interrupted submission does not leave an orphaned Storage object.
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   function updateField(field: keyof RegistrationValues) {
     return (value: string) => {
@@ -139,6 +148,9 @@ export default function GoldenVoiceRegistrationForm() {
       return;
     }
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     submittingRef.current = true;
     setProgress(0);
     setPhase(isOtherRegion ? 'uploading' : 'processing');
@@ -157,16 +169,23 @@ export default function GoldenVoiceRegistrationForm() {
           setPhase(nextPhase);
           setProgress(percent);
         },
+        controller.signal,
       );
 
       setSubmitted(true);
     } catch (error) {
-      // Reset progress so the visitor can retry safely (values/video kept).
-      setPhase('idle');
-      setProgress(0);
-      setSubmitError(error instanceof Error && error.message ? error.message : GENERIC_SUBMIT_ERROR);
+      // Ignore the intentional abort fired when the page unmounts.
+      if (!controller.signal.aborted) {
+        // Reset progress so the visitor can retry safely (values/video kept).
+        setPhase('idle');
+        setProgress(0);
+        setSubmitError(
+          error instanceof Error && error.message ? error.message : GENERIC_SUBMIT_ERROR,
+        );
+      }
     } finally {
       submittingRef.current = false;
+      abortRef.current = null;
     }
   }
 

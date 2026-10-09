@@ -3,6 +3,8 @@ import {
   ACCEPTED_VIDEO_MIME_TYPES,
   OTHER_REGION,
   REGION_OPTIONS,
+  SUPPORTED_FORMATS_LABEL,
+  VIDEO_FORMATS,
   VIDEO_MAX_DURATION_SECONDS,
 } from './constants.js';
 import type { RegionValue } from './constants.js';
@@ -14,12 +16,11 @@ const AGE_PATTERN = /^\d+$/;
 /** Arabic messages shared by the browser form and the serverless endpoints. */
 export const VIDEO_REQUIRED_MESSAGE = 'المرجو رفع فيديو المشاركة.';
 export const VIDEO_TOO_LONG_MESSAGE = 'مدة الفيديو تتجاوز الحد المسموح به.';
-export const VIDEO_UNREADABLE_MESSAGE = 'تعذّر قراءة الفيديو. المرجو اختيار ملف فيديو صالح.';
-export const VIDEO_FORMAT_MESSAGE = 'صيغة الفيديو غير مدعومة. الصيغ المدعومة: MP4 أو WebM.';
+export const VIDEO_FORMAT_MESSAGE = `صيغة الفيديو غير مدعومة. الصيغ المدعومة: ${SUPPORTED_FORMATS_LABEL}.`;
 export const VIDEO_SIZE_MESSAGE = 'حجم الفيديو كبير جدًا. المرجو اختيار ملف أصغر.';
 export const VIDEO_NOT_FOUND_MESSAGE = 'تعذّر العثور على الفيديو المرفوع. المرجو المحاولة من جديد.';
 export const VIDEO_DURATION_UNVERIFIABLE_MESSAGE =
-  'تعذّر التحقق من مدة الفيديو. المرجو اختيار ملف بصيغة MP4 أو WebM.';
+  'تعذّر التحقق من مدة الفيديو. المرجو اختيار ملف فيديو صالح من الصيغ المدعومة.';
 
 /**
  * Moroccan phone numbers after normalisation: a leading 0 followed by nine
@@ -104,7 +105,7 @@ export function isRegionValue(value: unknown): value is RegionValue {
 
 /** True when the MIME type is one the server can inspect and verify. */
 export function isAcceptedVideoMime(mime: string): boolean {
-  return (ACCEPTED_VIDEO_MIME_TYPES as readonly string[]).includes(mime.trim().toLowerCase());
+  return ACCEPTED_VIDEO_MIME_TYPES.includes(mime.trim().toLowerCase());
 }
 
 /** Lower-case file extension without the dot, or an empty string. */
@@ -113,16 +114,28 @@ export function getFileExtension(fileName: string): string {
   return index >= 0 ? fileName.slice(index + 1).toLowerCase() : '';
 }
 
+/** Canonical MIME type for a supported file extension, or null. */
+export function getVideoMimeForExtension(extension: string): string | null {
+  const normalized = extension.trim().toLowerCase();
+  return VIDEO_FORMATS.find((format) => format.extension === normalized)?.mime ?? null;
+}
+
+/** Canonical file extension for a supported MIME type, or null. */
+export function getVideoExtensionForMime(mime: string): string | null {
+  const normalized = mime.trim().toLowerCase();
+  return VIDEO_FORMATS.find((format) => format.mime === normalized)?.extension ?? null;
+}
+
 /**
  * Client-side convenience check used for immediate feedback. The server never
- * trusts the browser MIME type and re-validates the uploaded bytes.
+ * trusts the browser MIME type or extension and re-validates the uploaded bytes.
  */
 export function isAcceptedVideoFile(fileName: string, mimeType: string): boolean {
   if (isAcceptedVideoMime(mimeType)) {
     return true;
   }
 
-  return (ACCEPTED_VIDEO_EXTENSIONS as readonly string[]).includes(getFileExtension(fileName));
+  return ACCEPTED_VIDEO_EXTENSIONS.includes(getFileExtension(fileName));
 }
 
 /** Browser metadata is trusted only for a finite, positive duration within the limit. */
