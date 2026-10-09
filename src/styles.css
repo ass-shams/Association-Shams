@@ -2249,6 +2249,99 @@ button:disabled,
   }
 }
 
+/* ------------------------------------------------------------------
+   Responsive: show the three-image gallery on ≥640px and the single-
+   image carousel on <640px. Only the visible variant ever runs a
+   timer, so there is never more than one active carousel at a time.
+   ------------------------------------------------------------------ */
+
+@media (width < 640px) {
+  .home-hero__gallery {
+    display: none;
+  }
+}
+
+@media (width >= 640px) {
+  .home-hero__carousel {
+    display: none;
+  }
+}
+
+/* Mobile single-image carousel */
+.home-hero__carousel {
+  inline-size: 100%;
+  max-inline-size: 480px;
+  margin-inline: auto;
+}
+
+.home-hero__carousel-viewport {
+  position: relative;
+  inline-size: 100%;
+  aspect-ratio: 1672 / 941;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+}
+
+.home-hero__carousel-track {
+  display: flex;
+  inline-size: 100%;
+  block-size: 100%;
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.home-hero__carousel-slide {
+  flex: 0 0 100%;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: hidden;
+  background-color: var(--c-white);
+  border: 5px solid var(--c-white);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.home-hero__carousel-slide img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  border-radius: calc(var(--r-lg) - 4px);
+}
+
+.home-hero__carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-3);
+  margin-block-start: var(--sp-4);
+}
+
+.home-hero__dot {
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: var(--r-full);
+  border: 2px solid var(--c-blue);
+  background-color: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard);
+}
+
+.home-hero__dot:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+}
+
+.home-hero__dot--active {
+  background-color: var(--c-blue);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero__carousel-track {
+    transition-duration: 0.01ms;
+  }
+}
+
 .quick-card {
   block-size: 100%;
 }

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import FinalCTA from '@/components/finalCTA';
-import heroImage1 from '@/assets/home-page-images/hero-01.png';
-import heroImage2 from '@/assets/home-page-images/hero-02.png';
-import heroImage3 from '@/assets/home-page-images/hero-03.png';
+import heroImage1 from '@/assets/home-page-images/hero-01.webp';
+import heroImage2 from '@/assets/home-page-images/hero-02.webp';
+import heroImage3 from '@/assets/home-page-images/hero-03.webp';
 
 /** Team photos shown in the Hero, in their initial right / center / left slots. */
 const HERO_IMAGES = [
@@ -210,8 +210,20 @@ const FAQ_ITEMS: readonly FaqItem[] = [
 export default function HomePage() {
   // Slots are indexed by visual position: [left, center, right]; values are HERO_IMAGES indices.
   const [slots, setSlots] = useState<number[]>([2, 1, 0]);
+  const [mobileIndex, setMobileIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
   const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(width < 640px)');
+    const update = () => setIsMobile(mq.matches);
+
+    update();
+    mq.addEventListener('change', update);
+
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -224,7 +236,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (paused || reducedMotion) {
+    if (isMobile || paused || reducedMotion) {
       return;
     }
 
@@ -234,7 +246,19 @@ export default function HomePage() {
     }, 2000);
 
     return () => window.clearInterval(interval);
-  }, [paused, reducedMotion]);
+  }, [isMobile, paused, reducedMotion]);
+
+  useEffect(() => {
+    if (!isMobile || reducedMotion) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setMobileIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+    }, 2000);
+
+    return () => window.clearInterval(interval);
+  }, [isMobile, reducedMotion]);
 
   return (
     <>
@@ -292,6 +316,47 @@ export default function HomePage() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Mobile: single-image carousel */}
+            <div
+              className="home-hero__carousel"
+              role="group"
+              aria-label="صور لفريق جمعية شمس خلال أنشطتها"
+              aria-roledescription="carousel"
+            >
+              <div className="home-hero__carousel-viewport">
+                <div
+                  className="home-hero__carousel-track"
+                  dir="ltr"
+                  style={{ transform: `translateX(${-mobileIndex * 100}%)` }}
+                >
+                  {HERO_IMAGES.map((image) => (
+                    <div key={image.src} className="home-hero__carousel-slide">
+                      <img
+                        src={image.src}
+                        alt={image.alt}
+                        decoding="async"
+                        draggable={false}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="home-hero__carousel-dots" role="tablist" aria-label="اختر صورة">
+                {HERO_IMAGES.map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    role="tab"
+                    aria-selected={index === mobileIndex}
+                    aria-label={`الصورة ${index + 1}`}
+                    className={`home-hero__dot${index === mobileIndex ? ' home-hero__dot--active' : ''}`}
+                    onClick={() => setMobileIndex(index)}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
