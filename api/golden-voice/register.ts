@@ -9,6 +9,8 @@ import {
   removeObject,
   verifyVideo,
 } from '../_lib/goldenVoice.js';
+import { syncRegistrationToSheetBestEffort } from '../_lib/googleSheets.js';
+import type { GoldenVoiceSheetRegistration } from '../_lib/googleSheets.js';
 import type { RegionValue } from '../../src/pages/competitions/golden-voice/constants.js';
 import {
   isRegionValue,
@@ -86,6 +88,11 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
   return registerWithoutVideo(res, values, region, videoPath);
 }
 
+interface InsertedRegistration {
+  id: string;
+  created_at: string;
+}
+
 async function registerWithVideo(
   res: ServerResponse,
   values: RegistrationValues,
@@ -106,30 +113,13 @@ async function registerWithVideo(
     return sendJson(res, 400, { message: verification.message });
   }
 
-  try {
-    const { error } = await getSupabaseAdmin().from(GOLDEN_VOICE_TABLE).insert({
-      full_name: values.fullName.trim(),
-      phone: normalizeMoroccanPhone(values.phone.trim()),
-      age: Number(values.age),
-      city: values.city.trim(),
-      region,
-      video_path: videoPath,
-    });
-
-    if (error) {
-      await removeObject(videoPath);
-      console.error('golden-voice: registration insert failed', error.code ?? 'unknown');
-      return sendJson(res, 500, { message: INSERT_FAILED_MESSAGE });
-    }
-  } catch (error) {
+  const inserted = await insertRegistration(values, region, videoPath);
+  if (!inserted) {
     await removeObject(videoPath);
-    console.error(
-      'golden-voice: registration insert threw',
-      error instanceof Error ? error.name : 'unknown',
-    );
     return sendJson(res, 500, { message: INSERT_FAILED_MESSAGE });
   }
 
+  await syncToSheetBestEffort(inserted, values, region, videoPath);
   return sendJson(res, 201, { ok: true });
 }
 
@@ -143,27 +133,74 @@ async function registerWithoutVideo(
     return sendJson(res, 400, { message: REGION_MISMATCH_MESSAGE });
   }
 
-  try {
-    const { error } = await getSupabaseAdmin().from(GOLDEN_VOICE_TABLE).insert({
-      full_name: values.fullName.trim(),
-      phone: normalizeMoroccanPhone(values.phone.trim()),
-      age: Number(values.age),
-      city: values.city.trim(),
-      region,
-      video_path: null,
-    });
+  const inserted = await insertRegistration(values, region, null);
+  if (!inserted) {
+    return sendJson(res, 500, { message: INSERT_FAILED_MESSAGE });
+  }
 
-    if (error) {
-      console.error('golden-voice: registration insert failed', error.code ?? 'unknown');
-      return sendJson(res, 500, { message: INSERT_FAILED_MESSAGE });
+  await syncToSheetBestEffort(inserted, values, region, null);
+  return sendJson(res, 201, { ok: true });
+}
+
+/** Insert the registration and return its UUID and creation timestamp. */
+async function insertRegistration(
+  values: RegistrationValues,
+  region: RegionValue,
+  videoPath: string | null,
+): Promise<InsertedRegistration | null> {
+  try {
+    const { data, error } = await getSupabaseAdmin()
+      .from(GOLDEN_VOICE_TABLE)
+      .insert({
+        full_name: values.fullName.trim(),
+        phone: normalizeMoroccanPhone(values.phone.trim()),
+        age: Number(values.age),
+        city: values.city.trim(),
+        region,
+        video_path: videoPath,
+      })
+      .select('id, created_at')
+      .single();
+
+    if (error || !data) {
+      console.error('golden-voice: registration insert failed', error?.code ?? 'unknown');
+      return null;
     }
+
+    return data as InsertedRegistration;
   } catch (error) {
     console.error(
       'golden-voice: registration insert threw',
       error instanceof Error ? error.name : 'unknown',
     );
-    return sendJson(res, 500, { message: INSERT_FAILED_MESSAGE });
+    return null;
   }
+}
 
-  return sendJson(res, 201, { ok: true });
+/**
+ * Mirror the saved registration into the staff worksheet. Never throws and
+ * never affects the HTTP response: Supabase stays the source of truth, and a
+ * failed sync is recoverable with the protected reconciliation endpoint.
+ */
+async function syncToSheetBestEffort(
+  inserted: InsertedRegistration,
+  values: RegistrationValues,
+  region: RegionValue,
+  videoPath: string | null,
+): Promise<void> {
+  const registration: GoldenVoiceSheetRegistration = {
+    id: inserted.id,
+    fullName: values.fullName.trim(),
+    phone: normalizeMoroccanPhone(values.phone.trim()),
+    age: Number(values.age),
+    city: values.city.trim(),
+    region,
+    createdAt: inserted.created_at,
+    videoPath,
+  };
+
+  const synced = await syncRegistrationToSheetBestEffort(registration);
+  if (!synced) {
+    console.error('golden-voice: Google Sheets sync skipped or failed', inserted.id);
+  }
 }

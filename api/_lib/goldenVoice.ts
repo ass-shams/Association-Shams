@@ -175,3 +175,23 @@ export async function removeObject(path: string): Promise<void> {
     console.error('golden-voice: cleanup delete threw', error instanceof Error ? error.name : 'unknown');
   }
 }
+
+/**
+ * Create a short-lived signed URL for a private video object. Only used by the
+ * protected staff endpoint; it is never part of the public registration flow,
+ * so viewer links are not permanent and not stored anywhere.
+ */
+export async function createVideoViewUrl(
+  path: string,
+  expiresInSeconds = 300,
+): Promise<string | null> {
+  const { data, error } = await getSupabaseAdmin()
+    .storage.from(GOLDEN_VOICE_BUCKET)
+    .createSignedUrl(path, expiresInSeconds);
+
+  if (error || !data?.signedUrl) {
+    return null;
+  }
+
+  return data.signedUrl;
+}
