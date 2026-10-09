@@ -1,3 +1,4 @@
+import { Fragment, type ReactElement } from 'react';
 import { NavLink } from 'react-router-dom';
 import logo from '@/assets/navbar-footer.png';
 
@@ -64,27 +65,53 @@ function ArrowUpIcon() {
 interface FooterLink {
   to: string;
   label: string;
+  end?: boolean;
 }
 
-const ABOUT_LINKS: readonly FooterLink[] = [
+/** Only real, mounted routes — see the route table in `App.tsx`. */
+const QUICK_LINKS: readonly FooterLink[] = [
+  { to: '/', label: 'الرئيسية', end: true },
   { to: '/about', label: 'من نحن' },
   { to: '/activities', label: 'أنشطتنا' },
-  { to: '/competitions', label: 'المسابقات' },
+  { to: '/store', label: 'المتجر' },
 ];
 
-const QUICK_LINKS: readonly FooterLink[] = [
-  { to: '/store', label: 'المتجر' },
-  { to: '/documents', label: 'الوثائق الإدارية' },
-  { to: '/membership', label: 'الانخراط' },
-  { to: '/contact', label: 'اتصل بنا' },
-];
+interface ContactLink {
+  text: string;
+  href?: string;
+}
+
+interface ContactItem {
+  id: string;
+  label: string;
+  icon: () => ReactElement;
+  links: readonly ContactLink[];
+}
 
 /** Official contact details as published by the association. */
-const CONTACT_ITEMS = [
-  { id: 'email', label: 'البريد الإلكتروني', value: 'ass.shamsam@gmail.com', icon: MailIcon },
-  { id: 'phone', label: 'الهاتف', value: '0640635750 - 0663071162', icon: PhoneIcon },
-  { id: 'address', label: 'العنوان', value: 'الجيش الملكي , Beni Mellal, Morocco, 23000', icon: LocationIcon },
-] as const;
+const CONTACT_ITEMS: readonly ContactItem[] = [
+  {
+    id: 'email',
+    label: 'البريد الإلكتروني',
+    icon: MailIcon,
+    links: [{ text: 'ass.shamsam@gmail.com', href: 'mailto:ass.shamsam@gmail.com' }],
+  },
+  {
+    id: 'phone',
+    label: 'أرقام الهاتف',
+    icon: PhoneIcon,
+    links: [
+      { text: '0640635750', href: 'tel:+212640635750' },
+      { text: '0663071162', href: 'tel:+212663071162' },
+    ],
+  },
+  {
+    id: 'address',
+    label: 'العنوان',
+    icon: LocationIcon,
+    links: [{ text: 'الجيش الملكي , Beni Mellal, Morocco, 23000' }],
+  },
+];
 
 /** Official social profiles published by the association. */
 const SOCIAL_LINKS = [
@@ -121,30 +148,34 @@ export default function Footer() {
               />
             </NavLink>
 
-            <p className="footer-brand__text">
-              <span className="footer-brand__name">{BRAND_NAME}</span> {BRAND_DESCRIPTION}
-            </p>
-          </div>
+            <p className="footer-brand__name">{BRAND_NAME}</p>
+            <p className="footer-brand__text">{BRAND_DESCRIPTION}</p>
 
-          <nav className="footer-col" aria-label="عن الجمعية">
-            <h2 className="footer-heading">عن الجمعية</h2>
-            <ul className="footer-list">
-              {ABOUT_LINKS.map((link) => (
-                <li key={link.to}>
-                  <NavLink className="footer-link" to={link.to}>
-                    {link.label}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
+            <nav className="footer-social" aria-label="وسائل التواصل الاجتماعي">
+              <ul className="footer-social__list">
+                {SOCIAL_LINKS.map((item) => (
+                  <li key={item.id}>
+                    <a
+                      className="footer-social__link"
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={item.label}
+                    >
+                      <item.icon />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
 
           <nav className="footer-col" aria-label="روابط سريعة">
             <h2 className="footer-heading">روابط سريعة</h2>
             <ul className="footer-list">
               {QUICK_LINKS.map((link) => (
                 <li key={link.to}>
-                  <NavLink className="footer-link" to={link.to} end={link.to === '/'}>
+                  <NavLink className="footer-link" to={link.to} end={link.end}>
                     {link.label}
                   </NavLink>
                 </li>
@@ -163,28 +194,28 @@ export default function Footer() {
                   </span>
                   <span className="footer-contact__body">
                     <span className="footer-contact__label">{item.label}</span>
-                    <span className="footer-contact__value">{item.value}</span>
+                    <span className="footer-contact__values">
+                      {item.links.map((link, index) => (
+                        <Fragment key={link.text}>
+                          {index > 0 && (
+                            <span className="footer-contact__sep" aria-hidden="true">
+                              ·
+                            </span>
+                          )}
+                          {link.href ? (
+                            <a className="footer-contact__value" href={link.href}>
+                              {link.text}
+                            </a>
+                          ) : (
+                            <span className="footer-contact__value">{link.text}</span>
+                          )}
+                        </Fragment>
+                      ))}
+                    </span>
                   </span>
                 </li>
               ))}
             </ul>
-
-            <nav className="footer-social" aria-label="وسائل التواصل الاجتماعي">
-              <p className="footer-social__heading">تابعنا</p>
-              <ul className="footer-social__list">
-                {SOCIAL_LINKS.map((item) => (
-                  <li key={item.id}>
-                    <a
-                      className="footer-social__link"
-                      href={item.href}
-                      aria-label={item.label}
-                    >
-                      <item.icon />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
           </div>
         </div>
       </div>
