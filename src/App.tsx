@@ -5,6 +5,7 @@ import Navbar from '@/components/navbar';
 import AboutPage from '@/pages/public/AboutPage';
 import ActivitiesPage from '@/pages/public/ActivitiesPage';
 import Competitions from '@/pages/competitions/Competitions';
+import GoldenVoice from '@/pages/competitions/golden-voice/GoldenVoice';
 import ContactPage from '@/pages/public/ContactPage';
 import DocumentsPage from '@/pages/public/DocumentsPage';
 import GoldenVoicePage from '@/pages/public/GoldenVoicePage';
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/activities" element={<ActivitiesPage />} />
             <Route path="/competitions" element={<Competitions />} />
+            <Route path="/competitions/golden-voice" element={<GoldenVoice />} />
             <Route path="/store" element={<StorePage />} />
             <Route path="/store/:slug" element={<ProductDetailsPage />} />
             <Route path="/documents" element={<DocumentsPage />} />
