@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSignedUploadUrl, uploadPercent } from './registrationService';
+import { buildSignedUploadUrl, resolveUploadTotal, uploadPercent } from './registrationService';
 
 describe('buildSignedUploadUrl', () => {
   it('builds the signed-upload endpoint with an encoded token', () => {
@@ -37,5 +37,24 @@ describe('uploadPercent', () => {
     expect(uploadPercent(10, 0)).toBe(0);
     expect(uploadPercent(10, Number.NaN)).toBe(0);
     expect(uploadPercent(10, Number.POSITIVE_INFINITY)).toBe(0);
+  });
+});
+
+describe('resolveUploadTotal', () => {
+  it('uses the browser-reported total when it is computable', () => {
+    expect(resolveUploadTotal(true, 12_345, 10_000)).toBe(12_345);
+  });
+
+  it('falls back to the file size when the body length is not exposed', () => {
+    // The production symptom: cross-origin preflight requests report
+    // lengthComputable=false / total=0, which previously left the bar at 0%.
+    expect(resolveUploadTotal(false, 0, 10_000)).toBe(10_000);
+    expect(resolveUploadTotal(true, 0, 10_000)).toBe(10_000);
+    expect(resolveUploadTotal(false, Number.NaN, 10_000)).toBe(10_000);
+  });
+
+  it('returns 0 when neither total is usable', () => {
+    expect(resolveUploadTotal(false, 0, 0)).toBe(0);
+    expect(resolveUploadTotal(false, 0, Number.NaN)).toBe(0);
   });
 });

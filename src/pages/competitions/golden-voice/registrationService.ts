@@ -107,13 +107,60 @@ export function uploadPercent(loaded: number, total: number): number {
 }
 
 /**
+ * Pick the denominator for upload progress.
+ *
+ * This request is cross-origin and carries extra headers plus an upload
+ * listener, so the browser issues a CORS preflight. In that situation some
+ * browsers do not expose the request-body size: `lengthComputable` is `false`
+ * and `total` is `0`. The previous code only updated progress when
+ * `lengthComputable` was true, so the bar stayed at 0% and only the final
+ * `onload` fired. We still know the real transmitted bytes (`event.loaded`) and
+ * the file size, so fall back to the file size instead of dropping the update.
+ */
+export function resolveUploadTotal(
+  lengthComputable: boolean,
+  eventTotal: number,
+  fileSize: number,
+): number {
+  if (lengthComputable && Number.isFinite(eventTotal) && eventTotal > 0) {
+    return eventTotal;
+  }
+
+  return Number.isFinite(fileSize) && fileSize > 0 ? fileSize : 0;
+}
+
+/**
+ * Build the same multipart body `supabase-js` sends, but as a single `Blob`.
+ *
+ * A `Blob` body has a known total size, so browsers set `Content-Length` and
+ * report `lengthComputable`/`total` for smooth progress. A `FormData` body may
+ * be sent chunked with no exposed length.
+ */
+function buildMultipartBody(file: File): Blob {
+  const boundary = `----shamsGoldenVoice${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`;
+  const safeName = file.name.replace(/["\r\n]/g, '_') || 'video';
+  const prefix =
+    `--${boundary}\r\n` +
+    `Content-Disposition: form-data; name="cacheControl"\r\n\r\n` +
+    `${UPLOAD_CACHE_CONTROL}\r\n` +
+    `--${boundary}\r\n` +
+    `Content-Disposition: form-data; name=""; filename="${safeName}"\r\n` +
+    `Content-Type: ${file.type || 'application/octet-stream'}\r\n\r\n`;
+  const suffix = `\r\n--${boundary}--\r\n`;
+
+  return new Blob([prefix, file, suffix], {
+    type: `multipart/form-data; boundary=${boundary}`,
+  });
+}
+
+/**
  * Upload the file to the signed URL with real byte-level progress.
  *
  * `supabase-js`'s `uploadToSignedUrl` uses `fetch`, which exposes no upload
  * progress. This performs the identical signed request (same URL, headers and
- * multipart body) through `XMLHttpRequest`, whose `upload.onprogress` gives the
- * actual transmitted-bytes ratio. The security model is unchanged: the upload
- * still targets one server-issued, non-guessable object path.
+ * multipart body) through `XMLHttpRequest`, whose upload progress events give
+ * the actual transmitted-bytes ratio. The security model is unchanged: the
+ * upload still targets one server-issued, non-guessable object path.
  */
 function uploadFileWithProgress(
   upload: SignedUpload,
@@ -128,21 +175,29 @@ function uploadFileWithProgress(
   }
 
   return new Promise((resolve, reject) => {
-    const form = new FormData();
-    form.append('cacheControl', UPLOAD_CACHE_CONTROL);
-    form.append('', file);
-
+    const body = buildMultipartBody(file);
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', buildSignedUploadUrl(supabaseUrl, upload.bucket, upload.path, upload.token), true);
     xhr.setRequestHeader('apikey', anonKey);
     xhr.setRequestHeader('Authorization', `Bearer ${anonKey}`);
     xhr.setRequestHeader('x-upsert', 'false');
 
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        onPercent(uploadPercent(event.loaded, event.total));
-      }
-    };
+    // Register the listener before send: upload listeners must be attached
+    // before `send()`, and they also opt the request into CORS (allowed by the
+    // Storage endpoint).
+    xhr.upload.addEventListener(
+      'progress',
+      (event) => {
+        const total = resolveUploadTotal(event.lengthComputable, event.total, file.size);
+        if (total > 0) {
+          onPercent(uploadPercent(event.loaded, total));
+        }
+      },
+      false,
+    );
+
+    // The body has been fully transmitted once the upload emits `load`.
+    xhr.upload.addEventListener('load', () => onPercent(100), false);
 
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
@@ -157,7 +212,7 @@ function uploadFileWithProgress(
     xhr.onabort = () => reject(new Error(UPLOAD_ERROR));
     xhr.ontimeout = () => reject(new Error(UPLOAD_ERROR));
 
-    xhr.send(form);
+    xhr.send(body);
   });
 }
 
