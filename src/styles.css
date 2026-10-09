@@ -5727,6 +5727,64 @@ button:disabled,
   animation: btn-spin 0.8s linear infinite;
 }
 
+/* Submission progress */
+.gv-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.gv-progress__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.gv-progress__label {
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+}
+
+.gv-progress__percent {
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--c-blue-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.gv-progress__track {
+  overflow: hidden;
+  inline-size: 100%;
+  block-size: 10px;
+  background-color: var(--c-blue-tint);
+  border: 1px solid var(--c-blue-tint-strong);
+  border-radius: var(--r-full);
+}
+
+.gv-progress__fill {
+  block-size: 100%;
+  background-color: var(--c-blue-strong);
+  border-radius: var(--r-full);
+  transition: inline-size var(--dur-base) var(--ease-out);
+}
+
+.gv-progress__fill--indeterminate {
+  inline-size: 40%;
+  animation: gv-progress-indeterminate 1.2s var(--ease-out) infinite;
+}
+
+@keyframes gv-progress-indeterminate {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(320%);
+  }
+}
+
 /* Submit row */
 .gv-form__actions {
   display: flex;
@@ -5790,11 +5848,17 @@ button:disabled,
 
 @media (prefers-reduced-motion: reduce) {
   .gv-radio,
-  .gv-video__dropzone {
+  .gv-video__dropzone,
+  .gv-progress__fill {
     transition: none;
   }
 
   .gv-video__spinner {
+    animation: none;
+  }
+
+  .gv-progress__fill--indeterminate {
+    inline-size: 100%;
     animation: none;
   }
 }

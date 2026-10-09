@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import RegistrationField from './RegistrationField';
 import RegionField from './RegionField';
@@ -6,6 +6,7 @@ import VideoUploadField from './VideoUploadField';
 import { OTHER_REGION } from '../constants';
 import type { RegionValue } from '../constants';
 import { GENERIC_SUBMIT_ERROR, submitGoldenVoiceRegistration } from '../registrationService';
+import type { SubmissionPhase } from '../registrationService';
 import { validateRegistration, VIDEO_REQUIRED_MESSAGE } from '../validation';
 import type { RegistrationErrors, RegistrationValues, SelectedVideo } from '../types';
 
@@ -17,7 +18,7 @@ const EMPTY_VALUES: RegistrationValues = {
   region: '',
 };
 
-type SubmitStatus = 'idle' | 'submitting';
+type SubmitPhase = 'idle' | SubmissionPhase;
 
 function UserIcon() {
   return (
@@ -78,11 +79,13 @@ export default function GoldenVoiceRegistrationForm() {
   const [errors, setErrors] = useState<RegistrationErrors>({});
   const [video, setVideo] = useState<SelectedVideo | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [status, setStatus] = useState<SubmitStatus>('idle');
+  const [phase, setPhase] = useState<SubmitPhase>('idle');
+  const [progress, setProgress] = useState(0);
   const [submitError, setSubmitError] = useState('');
+  const submittingRef = useRef(false);
 
   const isOtherRegion = values.region === OTHER_REGION;
-  const isSubmitting = status === 'submitting';
+  const isSubmitting = phase !== 'idle';
 
   function updateField(field: keyof RegistrationValues) {
     return (value: string) => {
@@ -118,7 +121,8 @@ export default function GoldenVoiceRegistrationForm() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (isSubmitting) {
+    // Ref guard prevents a double submit before React re-renders the button.
+    if (submittingRef.current || isSubmitting) {
       return;
     }
 
@@ -135,7 +139,9 @@ export default function GoldenVoiceRegistrationForm() {
       return;
     }
 
-    setStatus('submitting');
+    submittingRef.current = true;
+    setProgress(0);
+    setPhase(isOtherRegion ? 'uploading' : 'processing');
 
     try {
       await submitGoldenVoiceRegistration(
@@ -147,13 +153,20 @@ export default function GoldenVoiceRegistrationForm() {
           region: values.region as RegionValue,
         },
         video,
+        ({ phase: nextPhase, percent }) => {
+          setPhase(nextPhase);
+          setProgress(percent);
+        },
       );
 
       setSubmitted(true);
     } catch (error) {
+      // Reset progress so the visitor can retry safely (values/video kept).
+      setPhase('idle');
+      setProgress(0);
       setSubmitError(error instanceof Error && error.message ? error.message : GENERIC_SUBMIT_ERROR);
     } finally {
-      setStatus('idle');
+      submittingRef.current = false;
     }
   }
 
@@ -162,7 +175,8 @@ export default function GoldenVoiceRegistrationForm() {
     setErrors({});
     setVideo(null);
     setSubmitted(false);
-    setStatus('idle');
+    setPhase('idle');
+    setProgress(0);
     setSubmitError('');
   }
 
@@ -173,9 +187,9 @@ export default function GoldenVoiceRegistrationForm() {
           <span className="gv-success__icon" aria-hidden="true">
             <CheckIcon />
           </span>
-          <h2 className="gv-success__title">تم التحقق من صحة المعلومات</h2>
+          <h2 className="gv-success__title">تم إرسال طلب المشاركة بنجاح</h2>
           <p className="gv-success__text">
-            تم التحقق من صحة المعلومات. سيتم تفعيل التسجيل الفعلي في مرحلة لاحقة.
+            تم تسجيل طلبك بنجاح. سنتواصل معك عند الحاجة في المراحل المقبلة.
           </p>
           <button type="button" className="btn btn--outline btn--md" onClick={handleReset}>
             تعديل الطلب
@@ -267,6 +281,38 @@ export default function GoldenVoiceRegistrationForm() {
         />
       ) : null}
 
+      {isSubmitting ? (
+        <div className="gv-progress" role="status" aria-live="polite">
+          <div className="gv-progress__row">
+            <span className="gv-progress__label">
+              {phase === 'uploading'
+                ? 'جارٍ رفع الفيديو…'
+                : 'جارٍ التحقق من الطلب وحفظ التسجيل…'}
+            </span>
+            {phase === 'uploading' ? (
+              <span className="gv-progress__percent">{Math.round(progress)}%</span>
+            ) : null}
+          </div>
+
+          {phase === 'uploading' ? (
+            <div
+              className="gv-progress__track"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progress)}
+              aria-label="نسبة رفع الفيديو"
+            >
+              <div className="gv-progress__fill" style={{ inlineSize: `${progress}%` }} />
+            </div>
+          ) : (
+            <div className="gv-progress__track" aria-hidden="true">
+              <div className="gv-progress__fill gv-progress__fill--indeterminate" />
+            </div>
+          )}
+        </div>
+      ) : null}
+
       <div className="gv-form__actions">
         <button
           type="submit"
@@ -275,7 +321,11 @@ export default function GoldenVoiceRegistrationForm() {
         >
           {isSubmitting ? <span className="btn__spinner" aria-hidden="true" /> : null}
           <span className="btn__label">
-            {isSubmitting ? 'جارٍ إرسال الطلب…' : 'إرسال طلب المشاركة'}
+            {phase === 'uploading'
+              ? 'جارٍ رفع الفيديو…'
+              : phase === 'processing'
+                ? 'جارٍ إرسال الطلب…'
+                : 'إرسال طلب المشاركة'}
           </span>
         </button>
       </div>

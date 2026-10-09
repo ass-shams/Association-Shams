@@ -1,4 +1,3 @@
-import { getBrowserSupabaseClient } from '@/lib/supabase';
 import { OTHER_REGION } from './constants';
 import type { RegionValue } from './constants';
 import type { SelectedVideo } from './types';
@@ -18,6 +17,17 @@ interface SignedUpload {
   token: string;
 }
 
+/** Submission stages shown to the visitor. */
+export type SubmissionPhase = 'uploading' | 'processing';
+
+export interface SubmissionProgress {
+  phase: SubmissionPhase;
+  /** Real upload percentage (0–100); only meaningful while uploading. */
+  percent: number;
+}
+
+export type OnSubmissionProgress = (progress: SubmissionProgress) => void;
+
 const UPLOADS_ENDPOINT = '/api/golden-voice/uploads';
 const REGISTER_ENDPOINT = '/api/golden-voice/register';
 const JSON_HEADERS = { 'content-type': 'application/json' };
@@ -28,6 +38,7 @@ const VIDEO_REQUIRED_MESSAGE = 'المرجو رفع فيديو المشاركة.
 const UPLOAD_ERROR = 'تعذّر رفع الفيديو. المرجو المحاولة مرة أخرى.';
 const CLIENT_NOT_CONFIGURED_ERROR =
   'خدمة رفع الفيديو غير مهيأة حالياً. المرجو المحاولة في وقت لاحق.';
+const UPLOAD_CACHE_CONTROL = '3600';
 
 /** Read a safe Arabic error message from an API response, if present. */
 async function readErrorMessage(response: Response, fallback: string): Promise<string> {
@@ -66,6 +77,90 @@ async function createSignedUpload(contentType: string): Promise<SignedUpload> {
   return { bucket: data.bucket, path: data.path, token: data.token };
 }
 
+/**
+ * Build the Storage signed-upload URL exactly like `supabase-js`
+ * (`/storage/v1/object/upload/sign/<bucket>/<path>?token=<token>`).
+ */
+export function buildSignedUploadUrl(
+  supabaseUrl: string,
+  bucket: string,
+  objectPath: string,
+  token: string,
+): string {
+  const base = supabaseUrl.replace(/\/+$/, '');
+  const cleanPath = objectPath.replace(/^\/|\/$/g, '').replace(/\/+/g, '/');
+  return `${base}/storage/v1/object/upload/sign/${bucket}/${cleanPath}?token=${encodeURIComponent(token)}`;
+}
+
+/** Clamp a raw byte ratio to a rounded 0–100 percentage. */
+export function uploadPercent(loaded: number, total: number): number {
+  if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(loaded)) {
+    return 0;
+  }
+
+  const percent = (loaded / total) * 100;
+  if (!Number.isFinite(percent)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(percent)));
+}
+
+/**
+ * Upload the file to the signed URL with real byte-level progress.
+ *
+ * `supabase-js`'s `uploadToSignedUrl` uses `fetch`, which exposes no upload
+ * progress. This performs the identical signed request (same URL, headers and
+ * multipart body) through `XMLHttpRequest`, whose `upload.onprogress` gives the
+ * actual transmitted-bytes ratio. The security model is unchanged: the upload
+ * still targets one server-issued, non-guessable object path.
+ */
+function uploadFileWithProgress(
+  upload: SignedUpload,
+  file: File,
+  onPercent: (percent: number) => void,
+): Promise<void> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+
+  if (!supabaseUrl || !anonKey) {
+    return Promise.reject(new Error(CLIENT_NOT_CONFIGURED_ERROR));
+  }
+
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    form.append('cacheControl', UPLOAD_CACHE_CONTROL);
+    form.append('', file);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', buildSignedUploadUrl(supabaseUrl, upload.bucket, upload.path, upload.token), true);
+    xhr.setRequestHeader('apikey', anonKey);
+    xhr.setRequestHeader('Authorization', `Bearer ${anonKey}`);
+    xhr.setRequestHeader('x-upsert', 'false');
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onPercent(uploadPercent(event.loaded, event.total));
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        onPercent(100);
+        resolve();
+      } else {
+        reject(new Error(UPLOAD_ERROR));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error(UPLOAD_ERROR));
+    xhr.onabort = () => reject(new Error(UPLOAD_ERROR));
+    xhr.ontimeout = () => reject(new Error(UPLOAD_ERROR));
+
+    xhr.send(form);
+  });
+}
+
 /** POST the registration payload and surface any safe Arabic server message. */
 async function register(payload: Record<string, unknown>): Promise<void> {
   const response = await fetch(REGISTER_ENDPOINT, {
@@ -84,9 +179,10 @@ async function register(payload: Record<string, unknown>): Promise<void> {
  *
  * `region === "other"`:
  *   1. request a signed upload URL from the server,
- *   2. upload the video straight to the private bucket (never through Vercel),
+ *   2. upload the video straight to the private bucket with real progress,
  *   3. register with the resulting object path, which the server re-validates.
- * `region` inside Beni Mellal-Khenifra: register without a video.
+ * `region` inside Beni Mellal-Khenifra: register without a video and report a
+ * plain processing state (no upload percentage).
  *
  * The server performs the authoritative validation and is the only component
  * allowed to write to the database with privileged credentials.
@@ -94,7 +190,10 @@ async function register(payload: Record<string, unknown>): Promise<void> {
 export async function submitGoldenVoiceRegistration(
   values: GoldenVoiceSubmissionValues,
   video: SelectedVideo | null,
+  onProgress?: OnSubmissionProgress,
 ): Promise<void> {
+  const report = onProgress ?? (() => undefined);
+
   if (values.region === OTHER_REGION) {
     if (!video) {
       throw new Error(VIDEO_REQUIRED_MESSAGE);
@@ -102,25 +201,16 @@ export async function submitGoldenVoiceRegistration(
 
     const upload = await createSignedUpload(video.file.type);
 
-    const supabase = getBrowserSupabaseClient();
-    if (!supabase) {
-      throw new Error(CLIENT_NOT_CONFIGURED_ERROR);
-    }
+    report({ phase: 'uploading', percent: 0 });
+    await uploadFileWithProgress(upload, video.file, (percent) => {
+      report({ phase: 'uploading', percent });
+    });
 
-    const { error } = await supabase.storage
-      .from(upload.bucket)
-      .uploadToSignedUrl(upload.path, upload.token, video.file, {
-        contentType: video.file.type,
-        upsert: false,
-      });
-
-    if (error) {
-      throw new Error(UPLOAD_ERROR);
-    }
-
+    report({ phase: 'processing', percent: 100 });
     await register({ ...values, videoPath: upload.path });
     return;
   }
 
+  report({ phase: 'processing', percent: 0 });
   await register({ ...values });
 }
