@@ -7,10 +7,10 @@
  * can download its own file reliably while `fileName` preserves the original
  * name. Update this file only when a document is added or replaced.
  */
-import doc0 from '@/assets/documents/عقد جمع عام لتأسيس جمعية شمس للكفيف و المبصر .pdf';
-import doc1 from '@/assets/documents/القانون الأساسي لجمعية شمس للكفيف و المبصر.pdf';
-import doc2 from '@/assets/documents/الجمع العام العادي و الاستتنائي.pdf';
-import doc3 from '@/assets/documents/وصل الايداع النهائي.pdf';
+import doc0 from '@/assets/documents/founding-minutes.pdf';
+import doc1 from '@/assets/documents/association-charter.pdf';
+import doc2 from '@/assets/documents/general-assembly.pdf';
+import doc3 from '@/assets/documents/final-deposit-receipt.pdf';
 import doc4 from '@/assets/documents/ATTESTATION DE COMPTE.pdf';
 
 export interface DocumentItem {
