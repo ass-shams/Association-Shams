@@ -23,3 +23,21 @@ export function methodNotAllowed(res: ServerResponse, allow = 'POST'): void {
   res.setHeader('Allow', allow);
   sendJson(res, 405, { message: 'الطريقة غير مسموح بها.' });
 }
+
+/** Parse a JSON request body regardless of whether the platform pre-parsed it. */
+export function readJsonBody(body: unknown): Record<string, unknown> | null {
+  if (body && typeof body === 'object') {
+    return body as Record<string, unknown>;
+  }
+
+  if (typeof body === 'string') {
+    try {
+      const parsed: unknown = JSON.parse(body);
+      return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}

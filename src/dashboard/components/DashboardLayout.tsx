@@ -1,10 +1,11 @@
 import { useEffect, useId, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import logo from '@/assets/navbar-footer.png';
-import { useAuth } from '../auth/useAuth';
 import { getDashboardPageTitle } from '../navigation';
 import DashboardNav from './DashboardNav';
 import { MenuIcon } from './icons';
+
+const DESIGNER_CREDIT_URL = 'https://nagriva.ma';
 
 /**
  * Dashboard shell: right-side sidebar on desktop, an off-canvas drawer on
@@ -12,12 +13,10 @@ import { MenuIcon } from './icons';
  * account, and the routed content area.
  */
 export default function DashboardLayout() {
-  const { user, admin } = useAuth();
   const location = useLocation();
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const sidebarId = useId();
 
-  const email = admin?.email ?? user?.email ?? '';
   const title = getDashboardPageTitle(location.pathname);
 
   // Close the mobile drawer whenever the route changes.
@@ -59,7 +58,6 @@ export default function DashboardLayout() {
       >
         <div className="dash-sidebar__brand">
           <img className="dash-sidebar__logo" src={logo} alt="جمعية شمس" />
-          <span className="dash-sidebar__brand-text">لوحة التحكم</span>
         </div>
 
         <DashboardNav onNavigate={() => setDrawerOpen(false)} />
@@ -81,7 +79,17 @@ export default function DashboardLayout() {
           <h1 className="dash-header__title">{title}</h1>
 
           <div className="dash-header__account">
-            {email ? <span className="dash-header__email">{email}</span> : null}
+            <a
+              className="dash-header__credit"
+              href={DESIGNER_CREDIT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+                من طرف{' '}
+              <span className="dash-header__credit-name" dir="ltr">
+                Redouane Ait EL-HADJ
+              </span>
+            </a>
           </div>
         </header>
 

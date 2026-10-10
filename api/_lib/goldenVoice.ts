@@ -59,23 +59,9 @@ function resolveMaxBytes(raw: string | undefined): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : VIDEO_MAX_BYTES;
 }
 
-/** Parse a JSON request body regardless of whether the platform pre-parsed it. */
-export function readJsonBody(body: unknown): Record<string, unknown> | null {
-  if (body && typeof body === 'object') {
-    return body as Record<string, unknown>;
-  }
-
-  if (typeof body === 'string') {
-    try {
-      const parsed: unknown = JSON.parse(body);
-      return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null;
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
+/* Re-exported for the existing Golden Voice endpoints; canonical definition
+ * lives in `./http.ts`. */
+export { readJsonBody } from './http.js';
 
 /** Reject object paths that were not produced by the uploads endpoint. */
 export function isValidVideoPath(path: string): boolean {

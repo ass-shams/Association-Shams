@@ -284,3 +284,42 @@ Never put the service-role key in a `VITE_*` variable or client code.
 - Confirm the admin account's email and ensure its `user_id` is present in
   `public.admin_users`. A confirmed Auth user that is **not** in `admin_users`
   still receives `403` from `/api/admin/me`.
+
+## 9. Contact requests
+
+End-to-end flow for the public `/contact` form and the dashboard section.
+
+### Migration
+
+`20261011120000_create_contact_requests.sql` creates `public.contact_requests`
+(name, email, phone, subject, message, status, timestamps), length/format/status
+CHECK constraints, newest-first and status indexes, an `updated_at` trigger, and
+**RLS enabled with no policies** (browser roles revoked; only `service_role`
+granted). Apply it with the same workflow as the other migrations (Supabase CLI
+`supabase db push`, or paste into the SQL Editor for the correct project).
+
+### Endpoints
+
+| Endpoint | Method | Purpose |
+| --- | --- | --- |
+| `/api/contact` | `POST` | Public submission: validates fields, verifies Turnstile server-side, inserts with the service role. |
+| `/api/admin/contact-requests` | `GET` | `requireAdmin`; newest-first list (`status`, `q`, `page`, `pageSize`) or detail (`?id=<uuid>`). |
+| `/api/admin/contact-requests` | `PATCH` | `requireAdmin`; `{ id, status }` → updates the workflow status. |
+
+Allowed statuses: `new`, `in_progress`, `resolved`.
+
+### Environment variable
+
+`TURNSTILE_SECRET_KEY` (server-only) — Cloudflare Turnstile secret matching
+`VITE_TURNSTILE_SITE_KEY`. The submission endpoint verifies every token with
+`https://challenges.cloudflare.com/turnstile/v0/siteverify` and **fails closed**
+(503) if the secret is missing. Never expose it to the browser.
+
+### Manual test
+
+1. Open `https://associationshams.com/contact`, complete Turnstile, send a test
+   message.
+2. In Supabase, confirm a row exists: `select id, name, status from public.contact_requests order by created_at desc limit 1;`
+3. Open `https://dashboard.associationshams.com`, sign in as an allowlisted admin.
+4. Open **طلبات الاتصال** — the message appears; the overview count increases.
+5. Change its status and refresh to confirm it persists.

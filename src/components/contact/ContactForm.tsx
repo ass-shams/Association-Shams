@@ -139,7 +139,7 @@ export default function ContactForm() {
     setStatus('submitting');
 
     try {
-      await submitContactMessage(values);
+      await submitContactMessage(values, turnstileToken);
       setStatus('success');
       resetTurnstile();
     } catch {

@@ -7097,13 +7097,33 @@ a.footer-contact__value:hover {
   min-inline-size: 0;
 }
 
-.dash-header__email {
-  max-inline-size: 220px;
+/* Designer credit shown at the inline-end of the header (top-left in RTL). */
+.dash-header__credit {
+  min-inline-size: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--fs-small);
+  line-height: var(--lh-compact);
   color: var(--c-text-soft);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+
+.dash-header__credit:hover {
+  color: var(--c-blue-text);
+  text-decoration: underline;
+}
+
+.dash-header__credit:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--r-xs);
+}
+
+/* Keep the Latin name an isolated LTR run inside the RTL sentence. */
+.dash-header__credit-name {
+  unicode-bidi: isolate;
 }
 
 .dash-content {
@@ -7475,8 +7495,12 @@ a.footer-contact__value:hover {
 }
 
 @media (width < 560px) {
-  .dash-header__email {
-    display: none;
+  /* Let the credit wrap instead of colliding with the page title. */
+  .dash-header__credit {
+    white-space: normal;
+    overflow: visible;
+    max-inline-size: 52%;
+    font-size: 0.75rem;
   }
 }
 
@@ -7488,4 +7512,304 @@ a.footer-contact__value:hover {
   .dash-stat__skeleton {
     animation: none;
   }
+}
+
+/* --- 17.7 Dashboard — contact requests --- */
+
+.dash-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.dash-contacts__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dash-contacts__search {
+  flex: 1 1 240px;
+  min-inline-size: 0;
+}
+
+.dash-contacts__search .input {
+  inline-size: 100%;
+}
+
+.dash-contacts__filters,
+.dash-contacts__status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.dash-contacts__filter {
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-full);
+  background-color: var(--c-white);
+  color: var(--c-text-soft);
+  font-family: inherit;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+
+.dash-contacts__filter:hover {
+  border-color: var(--c-border-strong);
+  color: var(--c-text);
+}
+
+.dash-contacts__filter:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+}
+
+.dash-contacts__filter.is-active {
+  background-color: var(--c-blue-tint);
+  border-color: var(--c-blue-tint-strong);
+  color: var(--c-blue-text);
+  font-weight: var(--fw-semibold);
+}
+
+.dash-contacts__filter:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.dash-contacts__feedback {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  font-size: var(--fs-body-sm);
+}
+
+.dash-contacts__feedback--success {
+  background-color: var(--c-success-tint);
+  border: 1px solid var(--c-success);
+  color: var(--c-success-text);
+}
+
+.dash-contacts__feedback--error {
+  background-color: var(--c-danger-tint);
+  border: 1px solid var(--c-danger);
+  color: var(--c-danger-text);
+}
+
+.dash-contacts__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dash-contacts__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--sp-4) var(--sp-5);
+  background-color: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.dash-contacts__main {
+  flex: 1 1 260px;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.dash-contacts__name {
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+}
+
+.dash-contacts__email,
+.dash-contacts__phone {
+  margin: 0;
+  font-size: var(--fs-small);
+  color: var(--c-text-soft);
+  overflow-wrap: anywhere;
+}
+
+.dash-contacts__subject {
+  margin: 0;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-medium);
+  color: var(--c-text);
+}
+
+.dash-contacts__preview {
+  margin: 0;
+  font-size: var(--fs-small);
+  line-height: var(--lh-body);
+  color: var(--c-text-soft);
+}
+
+.dash-contacts__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+.dash-contacts__date {
+  font-size: var(--fs-small);
+  color: var(--c-text-soft);
+  white-space: nowrap;
+}
+
+.dash-contacts__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-full);
+  font-size: var(--fs-badge);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+
+.dash-contacts__badge--new {
+  background-color: var(--c-blue-tint);
+  color: var(--c-blue-text);
+}
+
+.dash-contacts__badge--in_progress {
+  background-color: var(--c-warning-tint);
+  color: var(--c-warning);
+}
+
+.dash-contacts__badge--resolved {
+  background-color: var(--c-success-tint);
+  color: var(--c-success-text);
+}
+
+.dash-contacts__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+}
+
+.dash-contacts__page-info {
+  font-size: var(--fs-small);
+  color: var(--c-text-soft);
+}
+
+.dash-contacts__modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: var(--sp-4);
+}
+
+.dash-contacts__modal-backdrop {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background-color: rgb(23 32 51 / 50%);
+  cursor: pointer;
+}
+
+.dash-contacts__modal-panel {
+  position: relative;
+  z-index: 1;
+  inline-size: min(100%, 620px);
+  max-block-size: min(90vh, 720px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-6);
+  background-color: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.dash-contacts__modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.dash-contacts__modal-title {
+  margin: 0;
+  font-size: var(--fs-h3);
+  line-height: var(--lh-heading);
+  color: var(--c-text);
+}
+
+.dash-contacts__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.dash-contacts__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-inline-size: 0;
+}
+
+.dash-contacts__field dt {
+  font-size: var(--fs-small);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text-soft);
+}
+
+.dash-contacts__field dd {
+  margin: 0;
+  font-size: var(--fs-body-sm);
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+}
+
+.dash-contacts__field dd a {
+  color: var(--c-blue-text);
+}
+
+.dash-contacts__message {
+  margin: 0;
+  padding: var(--sp-4);
+  background-color: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--c-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.dash-contacts__detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.dash-contacts__detail-actions .btn {
+  text-decoration: none;
 }
