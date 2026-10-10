@@ -9,3 +9,4 @@ npm-debug.log*
 .env.*.local
 .vercel
 .env*
+!.env.example
