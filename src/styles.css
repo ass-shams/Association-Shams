@@ -6874,3 +6874,618 @@ a.footer-contact__value:hover {
     transform: none;
   }
 }
+
+/* ==========================================================================
+   17. DASHBOARD — AUTHENTICATION
+   ========================================================================== */
+
+.dash-boot {
+  min-block-size: 100vh;
+  background-color: var(--c-bg);
+}
+
+.dash-auth {
+  display: grid;
+  place-items: center;
+  min-block-size: 100vh;
+  padding: var(--sp-5);
+  background-color: var(--c-bg);
+}
+
+.dash-auth__card {
+  inline-size: min(100%, 420px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-6);
+  background-color: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.dash-auth__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.dash-auth__logo {
+  block-size: 56px;
+  inline-size: auto;
+}
+
+.dash-auth__brand-name {
+  margin: 0;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-semibold);
+  color: var(--c-blue-strong);
+}
+
+.dash-auth__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  text-align: center;
+}
+
+.dash-auth__title {
+  margin: 0;
+  font-size: var(--fs-h2);
+  line-height: var(--lh-heading);
+  text-align: center;
+}
+
+.dash-auth__lead,
+.dash-auth__text {
+  margin: 0;
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--c-text-soft);
+  text-align: center;
+}
+
+.dash-auth__email {
+  margin: 0;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+  text-align: center;
+}
+
+.dash-auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.dash-auth__status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.dash-auth__status .btn__spinner {
+  block-size: 22px;
+  inline-size: 22px;
+  color: var(--c-blue-strong);
+}
+
+/* Inline setup notice shown when Supabase env vars are missing locally. */
+.dash-auth__notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-4);
+  background-color: var(--c-warning-tint);
+  border: 1px solid var(--c-warning);
+  border-radius: var(--r-md);
+  text-align: start;
+}
+
+.dash-auth__notice-title {
+  margin: 0;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--c-warning);
+}
+
+.dash-auth__notice-text {
+  margin: 0;
+  font-size: var(--fs-small);
+  line-height: var(--lh-body);
+  color: var(--c-text);
+}
+
+/* Retry / sign-out actions on the auth status panels. */
+.dash-auth__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  justify-content: center;
+}
+
+/* --- 17.2 Layout shell --- */
+
+.dash-app {
+  display: flex;
+  min-block-size: 100vh;
+  background-color: var(--c-bg);
+}
+
+.dash-sidebar {
+  flex: 0 0 264px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-5) var(--sp-4);
+  background-color: var(--c-white);
+  border-inline-end: 1px solid var(--c-border);
+}
+
+.dash-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding-inline: var(--sp-2);
+}
+
+.dash-sidebar__logo {
+  block-size: 40px;
+  inline-size: auto;
+}
+
+.dash-sidebar__brand-text {
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-bold);
+  color: var(--c-text);
+}
+
+.dash-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.dash-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-6);
+  background-color: var(--c-white);
+  border-block-end: 1px solid var(--c-border);
+}
+
+.dash-header__menu {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: var(--tap-min);
+  block-size: var(--tap-min);
+  padding: 0;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background-color: var(--c-white);
+  color: var(--c-text);
+  cursor: pointer;
+}
+
+.dash-header__menu:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+}
+
+.dash-header__title {
+  flex: 1;
+  margin: 0;
+  font-size: var(--fs-h3);
+  line-height: var(--lh-heading);
+  color: var(--c-text);
+}
+
+.dash-header__account {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-inline-size: 0;
+}
+
+.dash-header__email {
+  max-inline-size: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-small);
+  color: var(--c-text-soft);
+}
+
+.dash-content {
+  flex: 1;
+  inline-size: 100%;
+  max-inline-size: var(--container-wide);
+  margin-inline: auto;
+  padding: var(--sp-6);
+}
+
+/* --- 17.3 Sidebar navigation --- */
+
+.dash-nav {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: var(--sp-2);
+  min-block-size: 0;
+}
+
+.dash-nav__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dash-nav__footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-block-start: auto;
+  padding-block-start: var(--sp-4);
+  border-block-start: 1px solid var(--c-border);
+}
+
+.dash-nav__link {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  inline-size: 100%;
+  padding: var(--sp-3);
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background-color: transparent;
+  color: var(--c-text);
+  font-family: inherit;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-medium);
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+
+.dash-nav__link:hover {
+  background-color: var(--c-blue-tint);
+  color: var(--c-blue-text);
+}
+
+.dash-nav__link:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+}
+
+.dash-nav__link.is-active {
+  background-color: var(--c-blue-tint);
+  border-color: var(--c-blue-tint-strong);
+  color: var(--c-blue-text);
+  font-weight: var(--fw-semibold);
+}
+
+.dash-nav__icon {
+  display: inline-flex;
+  flex: none;
+  color: inherit;
+}
+
+.dash-nav__label {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+/* --- 17.4 Overview cards --- */
+
+.dash-home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+.dash-home__block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.dash-home__heading {
+  margin: 0;
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-bold);
+  color: var(--c-text);
+}
+
+.dash-home__note {
+  margin: 0;
+  font-size: var(--fs-small);
+  color: var(--c-text-soft);
+}
+
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--sp-4);
+}
+
+.dash-stat {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+  background-color: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.dash-stat__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: var(--r-md);
+  background-color: var(--c-blue-tint);
+  color: var(--c-blue-strong);
+}
+
+.dash-stat__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-inline-size: 0;
+}
+
+.dash-stat__label {
+  margin: 0;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-medium);
+  color: var(--c-text-soft);
+}
+
+.dash-stat__value {
+  margin: 0;
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--c-text);
+}
+
+.dash-stat__value--muted {
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-medium);
+  color: var(--c-text-soft);
+}
+
+.dash-stat__skeleton {
+  display: block;
+  inline-size: 60%;
+  block-size: 1.75rem;
+  border-radius: var(--r-sm);
+  background-color: var(--c-border);
+  animation: dash-pulse 1.2s var(--ease-standard) infinite;
+}
+
+@keyframes dash-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.dash-quick {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--sp-4);
+}
+
+.dash-action {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  background-color: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xs);
+  color: var(--c-text);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  transition:
+    border-color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+
+.dash-action:hover {
+  border-color: var(--c-blue-strong);
+  color: var(--c-blue-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.dash-action:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+}
+
+.dash-action__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--r-md);
+  background-color: var(--c-blue-tint);
+  color: var(--c-blue-strong);
+}
+
+.dash-action__label {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.dash-action__arrow {
+  display: inline-flex;
+  flex: none;
+  color: var(--c-text-soft);
+}
+
+/* --- 17.5 Section pages --- */
+
+.dash-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.dash-section__lead {
+  margin: 0;
+  max-inline-size: var(--container-prose);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--c-text-soft);
+}
+
+.dash-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-8) var(--sp-5);
+  text-align: center;
+  background-color: var(--c-white);
+  border: 1px dashed var(--c-border-strong);
+  border-radius: var(--r-lg);
+}
+
+.dash-panel__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 56px;
+  block-size: 56px;
+  border-radius: var(--r-full);
+  background-color: var(--c-blue-tint);
+  color: var(--c-blue-strong);
+}
+
+.dash-panel__spinner {
+  inline-size: 24px;
+  block-size: 24px;
+  color: var(--c-blue-strong);
+}
+
+.dash-panel--error {
+  border-color: var(--c-danger);
+}
+
+.dash-panel--error .dash-panel__icon {
+  background-color: var(--c-danger-tint);
+  color: var(--c-danger-text);
+}
+
+.dash-panel__title {
+  margin: 0;
+  font-size: var(--fs-h4);
+  color: var(--c-text);
+}
+
+.dash-panel__text {
+  margin: 0;
+  max-inline-size: var(--container-prose);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--c-text-soft);
+}
+
+.dash-panel__action {
+  margin-block-start: var(--sp-2);
+}
+
+/* --- 17.6 Mobile drawer / responsive --- */
+
+.dash-backdrop {
+  display: none;
+}
+
+@media (width < 900px) {
+  .dash-sidebar {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 40;
+    inline-size: min(84vw, 300px);
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform var(--dur-fast) var(--ease-standard);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .dash-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .dash-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    padding: 0;
+    border: 0;
+    background-color: rgb(23 32 51 / 45%);
+    cursor: pointer;
+  }
+
+  .dash-header {
+    padding-inline: var(--sp-4);
+  }
+
+  .dash-header__menu {
+    display: inline-flex;
+  }
+
+  .dash-content {
+    padding: var(--sp-5) var(--sp-4);
+  }
+}
+
+@media (width < 560px) {
+  .dash-header__email {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-sidebar {
+    transition: none;
+  }
+
+  .dash-stat__skeleton {
+    animation: none;
+  }
+}

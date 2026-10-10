@@ -156,3 +156,131 @@ while leaving `/api/*` to the serverless functions:
 - **Optional rate limiting:** the endpoints are public. Add request-rate rules
   in **Vercel → Project → Firewall** if abuse becomes a problem. No in-memory
   rate limiter is used (serverless instances do not share state).
+
+## 7. Admin dashboard authentication
+
+Authentication uses **Supabase Auth** (email + password). Authorization is a
+server-controlled allowlist, never client-editable metadata. There is no public
+sign-up.
+
+### Migration
+
+`20261010120000_create_admin_users.sql` creates `public.admin_users`:
+
+- RLS enabled with **no policies** → the browser can never read or write it.
+- `service_role` is the only role with grants.
+- `public.is_admin()` is a `security definer` helper for future admin RLS
+  policies (returns only whether the current `auth.uid()` is an admin).
+
+Apply it like the other migrations (Supabase CLI `supabase db push`, or paste
+into the SQL Editor).
+
+### Manual steps (Supabase Dashboard)
+
+1. **Authentication → Providers → Email**: ensure Email is enabled. Disable
+   "Allow new users to sign up" (or keep sign-ups disabled) so no public
+   self-registration exists.
+2. **Authentication → Users**: create the administrator account manually
+   (email + password). Do not invent or commit credentials.
+3. Grant administrator access by inserting that user's id into the allowlist:
+
+   ```sql
+   insert into public.admin_users (user_id, email)
+   values ('<AUTH_USER_UUID>', '<ADMIN_EMAIL>')
+   on conflict (user_id) do nothing;
+   ```
+
+   Remove access with `delete from public.admin_users where user_id = '<UUID>';`.
+
+### Endpoint
+
+`GET /api/admin/me` verifies the bearer access token with
+`auth.getUser` (service role) and checks `admin_users`. Responses: `200` admin
+identity, `401` missing/invalid session, `403` authenticated non-admin,
+`503` server credentials unavailable. Every future admin endpoint must call
+`requireAdmin` from `api/_lib/adminAuth.ts`; React route guards alone are not
+sufficient.
+
+### Browser client
+
+The dashboard uses a dedicated client (`src/dashboard/auth/supabaseAuthClient.ts`)
+with `persistSession: true`. The public client in `src/lib/supabase.ts` is
+unchanged (no persisted session). Both use the existing `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_ANON_KEY`; no new environment variables are required. The
+service-role key is used only server-side.
+
+### Local development (important)
+
+`npm run dev` runs Vite only; it does **not** execute the serverless functions
+under `api/`. A request to `/api/admin/me` is served by Vite as the source module
+(`Content-Type: text/javascript`, HTTP 200), so the browser cannot parse it as
+JSON and login never completes.
+
+`vercel dev` (CLI 63.1.2) cannot serve this project locally: its
+static-build/dev-server handshake hangs, so the Vercel server accepts TCP but
+never returns HTTP. Until that tooling issue is resolved, run the API with the
+bundled dev runner, which executes the **same** handlers on Node:
+
+```bash
+# terminal 1 — API on :3000 (the Vite proxy target)
+npm run dev:api
+
+# terminal 2 — frontend on :5173
+npm run dev
+```
+
+Open `http://localhost:5173/dashboard`. `vite.config.ts` proxies `/api` to
+`http://localhost:3000`, so the browser talks to the API on one origin. Verify
+the endpoint directly (must return `401 application/json` quickly):
+
+```bash
+curl -i --max-time 5 http://localhost:5173/api/admin/me
+```
+
+If you run the API on another port, set `API_PORT` for `dev:api` and
+`API_PROXY_TARGET` in `.env.local` (a server-side, non-`VITE_` variable) to match.
+`vercel dev` remains the production-parity option and can be used again once the
+CLI no longer hangs.
+
+## 8. Production — dashboard subdomain
+
+The dashboard and the public website are the **same deployment**; the app picks
+the surface at runtime from the hostname (`src/dashboard/surface.ts`): the admin
+dashboard on a `dashboard.*` host, the public website everywhere else. The public
+site is never rendered on the dashboard host, and the dashboard is never rendered
+on `associationshams.com` / `www.associationshams.com`.
+
+### Vercel (manual, in the dashboard UI)
+
+- Add `dashboard.associationshams.com` as a domain on the **same** Vercel
+  project that serves `associationshams.com`. Do not point the public domain at a
+  different project/deployment.
+- `vercel.json` (already committed) keeps the SPA rewrite, excludes `/api/*` from
+  it, redirects `associationshams.com/dashboard*` to the subdomain, and adds
+  `X-Robots-Tag: noindex` plus frame/content-type/referrer headers on the
+  dashboard host only. (`has` rules apply when deployed; they are not evaluated
+  by the locally broken `vercel dev`.)
+
+### Environment variables (Vercel → Production)
+
+| Variable | Scope | Purpose |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL` | build + client | Same project as the server URL |
+| `VITE_SUPABASE_ANON_KEY` | build + client | Public/publishable key for the browser |
+| `SUPABASE_URL` | server only | Falls back to `VITE_SUPABASE_URL` |
+| `SUPABASE_SERVICE_ROLE_KEY` | **server only** | Privileged admin allowlist lookup |
+| `GOLDEN_VOICE_ADMIN_SECRET` | server only | Existing staff video-link endpoint |
+
+Never put the service-role key in a `VITE_*` variable or client code.
+
+### Supabase Auth settings (manual)
+
+- **Auth → URL Configuration**: set the **Site URL** and add to **Redirect
+  URLs** both `https://dashboard.associationshams.com` and
+  `https://associationshams.com`. Password sign-in does not redirect, but any
+  email flow (invite, password reset, magic link) resolves against these.
+- Keep **email sign-ups** disabled; administrator accounts are created manually
+  (Section 7).
+- Confirm the admin account's email and ensure its `user_id` is present in
+  `public.admin_users`. A confirmed Auth user that is **not** in `admin_users`
+  still receives `403` from `/api/admin/me`.

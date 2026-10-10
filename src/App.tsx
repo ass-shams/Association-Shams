@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import Footer from '@/components/footer';
 import Navbar from '@/components/navbar';
@@ -14,7 +14,15 @@ import MembershipPage from '@/pages/public/MembershipPage';
 import ProductDetailsPage from '@/pages/public/ProductDetailsPage';
 import StorePage from '@/pages/public/StorePage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import { isDashboardSurface } from '@/dashboard/surface';
 import '@/styles.css';
+
+/**
+ * Dashboard surface, loaded lazily so the public website's bundle is
+ * unaffected. It is only ever requested on the dashboard host (or `/dashboard`
+ * in development).
+ */
+const DashboardApp = lazy(() => import('@/dashboard/DashboardApp'));
 
 /** Restores the scroll position to the top on every navigation. */
 function ScrollToTop() {
@@ -47,12 +55,12 @@ function SiteFooter() {
 }
 
 /**
- * Application root: public shell (navbar + main + footer) and the sitemap.
- * All website styles live in `src/styles.css`, imported once here.
+ * Public website shell: navbar + main + footer and the public sitemap. All
+ * website styles live in `src/styles.css`, imported once in `App`.
  */
-export default function App() {
+function PublicSite() {
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
 
       <div className="shell" dir="rtl">
@@ -81,6 +89,31 @@ export default function App() {
 
         <SiteFooter />
       </div>
+    </>
+  );
+}
+
+/**
+ * Application root. A single `BrowserRouter` serves whichever surface matches
+ * the current host: the public website for every host, or the admin dashboard
+ * on its dedicated subdomain (and `/dashboard` during development).
+ */
+export default function App() {
+  const isDashboard = isDashboardSurface(
+    window.location.hostname,
+    window.location.pathname,
+    import.meta.env.DEV,
+  );
+
+  return (
+    <BrowserRouter>
+      {isDashboard ? (
+        <Suspense fallback={<div className="dash-boot" aria-hidden="true" />}>
+          <DashboardApp />
+        </Suspense>
+      ) : (
+        <PublicSite />
+      )}
     </BrowserRouter>
   );
 }
