@@ -53,12 +53,12 @@ function StatusBadge({ status }: { status: ContactStatus }) {
   );
 }
 
-/** One labelled information card (label above value). */
-function InfoCard({ label, value }: { label: string; value: ReactNode }) {
+/** One labelled field (label above value). */
+function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="dash-contacts__card">
-      <dt className="dash-contacts__card-label">{label}</dt>
-      <dd className="dash-contacts__card-value">{value}</dd>
+    <div className="dash-contacts__field">
+      <span className="dash-contacts__field-label">{label}</span>
+      <span className="dash-contacts__field-value">{value}</span>
     </div>
   );
 }
@@ -184,8 +184,7 @@ export default function ContactRequestsPage() {
     }
   }
 
-  const total = result?.count ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil((result?.count ?? 0) / PAGE_SIZE));
   const requests = result?.data ?? [];
 
   return (
@@ -218,10 +217,6 @@ export default function ContactRequestsPage() {
               </button>
             ))}
           </div>
-
-          {result ? (
-            <span className="dash-contacts__count">إجمالي الطلبات: {total.toLocaleString('en-US')}</span>
-          ) : null}
         </div>
 
         {feedback ? (
@@ -280,15 +275,15 @@ export default function ContactRequestsPage() {
                           <StatusBadge status={request.status} />
                         </span>
                         <span className="dash-contacts__row-line">{request.email}</span>
-                        {request.phone ? (
-                          <span className="dash-contacts__row-line">{request.phone}</span>
-                        ) : null}
                         <span className="dash-contacts__row-preview">
                           {request.subject || previewOf(request.message)}
                         </span>
-                        <time className="dash-contacts__row-date" dateTime={request.created_at}>
-                          {formatDate(request.created_at)}
-                        </time>
+                        <span className="dash-contacts__row-foot">
+                          <time className="dash-contacts__row-date" dateTime={request.created_at}>
+                            {formatDate(request.created_at)}
+                          </time>
+                          <span className="dash-contacts__view">عرض</span>
+                        </span>
                       </button>
                     </li>
                   ))}
@@ -341,13 +336,13 @@ export default function ContactRequestsPage() {
                   </button>
                 </div>
 
-                <dl className="dash-contacts__cards">
-                  <InfoCard label="الاسم الكامل" value={selected.name} />
-                  <InfoCard
+                <div className="dash-contacts__fields">
+                  <Field label="الاسم الكامل" value={selected.name} />
+                  <Field
                     label="البريد الإلكتروني"
                     value={<a href={`mailto:${selected.email}`}>{selected.email}</a>}
                   />
-                  <InfoCard
+                  <Field
                     label="رقم الهاتف"
                     value={
                       selected.phone ? (
@@ -357,39 +352,37 @@ export default function ContactRequestsPage() {
                       )
                     }
                   />
-                  <InfoCard
+                  <Field
                     label="الموضوع"
                     value={
                       selected.subject || <span className="dash-contacts__muted">بدون موضوع</span>
                     }
                   />
-                  <InfoCard label="تاريخ الإرسال" value={formatDate(selected.created_at)} />
-                  <div className="dash-contacts__card dash-contacts__card--status">
-                    <dt className="dash-contacts__card-label">حالة الطلب</dt>
-                    <dd className="dash-contacts__card-value">
-                      <div
-                        className="dash-contacts__status-control"
-                        role="group"
-                        aria-label="تغيير حالة الطلب"
-                      >
-                        {STATUS_ORDER.map((status) => (
-                          <button
-                            key={status}
-                            type="button"
-                            className={`dash-contacts__status-option${
-                              selected.status === status ? ' is-active' : ''
-                            }`}
-                            disabled={isUpdating}
-                            aria-pressed={selected.status === status}
-                            onClick={() => void changeStatus(selected, status)}
-                          >
-                            {STATUS_LABELS[status]}
-                          </button>
-                        ))}
-                      </div>
-                    </dd>
+                  <Field label="تاريخ الإرسال" value={formatDate(selected.created_at)} />
+                  <div className="dash-contacts__field dash-contacts__field--status">
+                    <span className="dash-contacts__field-label">حالة الطلب</span>
+                    <div
+                      className="dash-contacts__status-control"
+                      role="group"
+                      aria-label="تغيير حالة الطلب"
+                    >
+                      {STATUS_ORDER.map((status) => (
+                        <button
+                          key={status}
+                          type="button"
+                          className={`dash-contacts__status-option${
+                            selected.status === status ? ' is-active' : ''
+                          }`}
+                          disabled={isUpdating}
+                          aria-pressed={selected.status === status}
+                          onClick={() => void changeStatus(selected, status)}
+                        >
+                          {STATUS_LABELS[status]}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </dl>
+                </div>
 
                 <div className="dash-contacts__message-section">
                   <h4 className="dash-contacts__section-title">الرسالة</h4>
