@@ -7525,29 +7525,35 @@ a.footer-contact__value:hover {
 .dash-contacts__toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--sp-3);
   align-items: center;
-  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background-color: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
 }
 
 .dash-contacts__search {
-  flex: 1 1 240px;
+  flex: 1 1 260px;
   min-inline-size: 0;
 }
 
 .dash-contacts__search .input {
   inline-size: 100%;
+  min-block-size: 48px;
 }
 
-.dash-contacts__filters,
-.dash-contacts__status-actions {
+.dash-contacts__filters {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
 }
 
 .dash-contacts__filter {
-  padding: var(--sp-2) var(--sp-4);
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 48px;
+  padding: 0 var(--sp-4);
   border: 1px solid var(--c-border);
   border-radius: var(--r-full);
   background-color: var(--c-white);
@@ -7584,6 +7590,13 @@ a.footer-contact__value:hover {
   opacity: 0.6;
 }
 
+.dash-contacts__count {
+  margin-inline-start: auto;
+  font-size: var(--fs-small);
+  color: var(--c-text-soft);
+  white-space: nowrap;
+}
+
 .dash-contacts__feedback {
   margin: 0;
   padding: var(--sp-3) var(--sp-4);
@@ -7603,76 +7616,96 @@ a.footer-contact__value:hover {
   color: var(--c-danger-text);
 }
 
-.dash-contacts__list {
+.dash-contacts__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+.dash-contacts__list-col {
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
+  min-inline-size: 0;
+}
+
+.dash-contacts__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .dash-contacts__row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-4);
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: var(--sp-4) var(--sp-5);
-  background-color: var(--c-white);
-  border: 1px solid var(--c-border);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-xs);
-}
-
-.dash-contacts__main {
-  flex: 1 1 260px;
-  min-inline-size: 0;
+  inline-size: 100%;
+  text-align: start;
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
+  padding: var(--sp-4);
+  background-color: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  color: var(--c-text);
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+
+.dash-contacts__row:hover {
+  border-color: var(--c-border-strong);
+}
+
+.dash-contacts__row:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+}
+
+.dash-contacts__row.is-selected {
+  background-color: var(--c-blue-tint);
+  border-color: var(--c-blue-strong);
+}
+
+.dash-contacts__row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
 }
 
 .dash-contacts__name {
-  margin: 0;
+  min-inline-size: 0;
   font-size: var(--fs-body);
   font-weight: var(--fw-semibold);
   color: var(--c-text);
+  overflow-wrap: anywhere;
 }
 
-.dash-contacts__email,
-.dash-contacts__phone {
-  margin: 0;
+.dash-contacts__row-line {
   font-size: var(--fs-small);
   color: var(--c-text-soft);
   overflow-wrap: anywhere;
 }
 
-.dash-contacts__subject {
-  margin: 0;
-  font-size: var(--fs-body-sm);
-  font-weight: var(--fw-medium);
+.dash-contacts__row-preview {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--fs-small);
+  line-height: var(--lh-compact);
   color: var(--c-text);
+  overflow-wrap: anywhere;
 }
 
-.dash-contacts__preview {
-  margin: 0;
-  font-size: var(--fs-small);
-  line-height: var(--lh-body);
-  color: var(--c-text-soft);
-}
-
-.dash-contacts__meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--sp-3);
-}
-
-.dash-contacts__date {
+.dash-contacts__row-date {
   font-size: var(--fs-small);
   color: var(--c-text-soft);
-  white-space: nowrap;
 }
 
 .dash-contacts__badge {
@@ -7712,93 +7745,161 @@ a.footer-contact__value:hover {
   color: var(--c-text-soft);
 }
 
-.dash-contacts__modal {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: grid;
-  place-items: center;
-  padding: var(--sp-4);
+.dash-contacts__detail {
+  display: none;
+  min-inline-size: 0;
 }
 
-.dash-contacts__modal-backdrop {
-  position: absolute;
-  inset: 0;
-  padding: 0;
-  border: 0;
-  background-color: rgb(23 32 51 / 50%);
-  cursor: pointer;
+.dash-contacts__detail.is-open {
+  display: block;
 }
 
-.dash-contacts__modal-panel {
-  position: relative;
-  z-index: 1;
-  inline-size: min(100%, 620px);
-  max-block-size: min(90vh, 720px);
-  overflow-y: auto;
+.dash-contacts__panel {
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
-  padding: var(--sp-6);
+  padding: var(--sp-5);
   background-color: var(--c-white);
   border: 1px solid var(--c-border);
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow-lg);
 }
 
-.dash-contacts__modal-head {
+.dash-contacts__panel--empty {
+  align-items: center;
+  justify-content: center;
+  min-block-size: 160px;
+  text-align: center;
+}
+
+.dash-contacts__placeholder {
+  margin: 0;
+  font-size: var(--fs-body-sm);
+  color: var(--c-text-soft);
+}
+
+.dash-contacts__panel-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--sp-3);
 }
 
-.dash-contacts__modal-title {
+.dash-contacts__panel-title {
   margin: 0;
-  font-size: var(--fs-h3);
+  font-size: var(--fs-h4);
   line-height: var(--lh-heading);
   color: var(--c-text);
+  overflow-wrap: anywhere;
 }
 
-.dash-contacts__fields {
+.dash-contacts__cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--sp-3);
   margin: 0;
 }
 
-.dash-contacts__field {
+.dash-contacts__card {
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
   min-inline-size: 0;
+  padding: var(--sp-3) var(--sp-4);
+  background-color: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
 }
 
-.dash-contacts__field dt {
+.dash-contacts__card-label {
   font-size: var(--fs-small);
   font-weight: var(--fw-semibold);
   color: var(--c-text-soft);
 }
 
-.dash-contacts__field dd {
+.dash-contacts__card-value {
   margin: 0;
   font-size: var(--fs-body-sm);
   color: var(--c-text);
   overflow-wrap: anywhere;
 }
 
-.dash-contacts__field dd a {
+.dash-contacts__card-value a {
   color: var(--c-blue-text);
+}
+
+.dash-contacts__muted {
+  color: var(--c-text-soft);
+}
+
+.dash-contacts__status-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-block-start: var(--sp-1);
+}
+
+.dash-contacts__status-option {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 36px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-full);
+  background-color: var(--c-white);
+  color: var(--c-text-soft);
+  font-family: inherit;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+
+.dash-contacts__status-option:hover {
+  border-color: var(--c-border-strong);
+  color: var(--c-text);
+}
+
+.dash-contacts__status-option:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+}
+
+.dash-contacts__status-option.is-active {
+  background-color: var(--c-blue-tint);
+  border-color: var(--c-blue-tint-strong);
+  color: var(--c-blue-text);
+  font-weight: var(--fw-semibold);
+}
+
+.dash-contacts__status-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.dash-contacts__message-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.dash-contacts__section-title {
+  margin: 0;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-bold);
+  color: var(--c-text);
 }
 
 .dash-contacts__message {
   margin: 0;
   padding: var(--sp-4);
-  background-color: var(--c-bg);
+  background-color: var(--c-white);
   border: 1px solid var(--c-border);
   border-radius: var(--r-md);
   font-size: var(--fs-body-sm);
-  line-height: var(--lh-body);
+  line-height: 2;
   color: var(--c-text);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -7812,4 +7913,26 @@ a.footer-contact__value:hover {
 
 .dash-contacts__detail-actions .btn {
   text-decoration: none;
+}
+
+@media (width >= 900px) {
+  .dash-contacts__layout {
+    grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
+  }
+
+  .dash-contacts__detail {
+    display: block;
+    position: sticky;
+    inset-block-start: var(--sp-4);
+  }
+}
+
+@media (width >= 1100px) {
+  .dash-contacts__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dash-contacts__card--status {
+    grid-column: 1 / -1;
+  }
 }

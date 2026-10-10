@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import DataStatePanel from '../components/DataStatePanel';
 import SectionPage from '../components/SectionPage';
 import { AdminApiError } from '../services/adminApi';
@@ -25,7 +26,7 @@ const STATUS_FILTERS: readonly { value: ContactStatus | 'all'; label: string }[]
 ];
 
 const PAGE_SIZE = 10;
-const PREVIEW_LENGTH = 140;
+const PREVIEW_LENGTH = 160;
 const FALLBACK_LOAD_ERROR = 'تعذّر تحميل طلبات الاتصال. المرجو المحاولة مرة أخرى.';
 const FALLBACK_UPDATE_ERROR = 'تعذّر تحديث حالة الطلب. المرجو المحاولة مرة أخرى.';
 
@@ -52,6 +53,16 @@ function StatusBadge({ status }: { status: ContactStatus }) {
   );
 }
 
+/** One labelled information card (label above value). */
+function InfoCard({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="dash-contacts__card">
+      <dt className="dash-contacts__card-label">{label}</dt>
+      <dd className="dash-contacts__card-value">{value}</dd>
+    </div>
+  );
+}
+
 export default function ContactRequestsPage() {
   const [statusFilter, setStatusFilter] = useState<ContactStatus | 'all'>('all');
   const [searchInput, setSearchInput] = useState('');
@@ -67,6 +78,8 @@ export default function ContactRequestsPage() {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
     null,
   );
+
+  const detailRef = useRef<HTMLElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -99,6 +112,27 @@ export default function ContactRequestsPage() {
     return () => clearTimeout(handle);
   }, [searchInput]);
 
+  // Drop a selection that is no longer part of the visible result set.
+  useEffect(() => {
+    if (!result) {
+      return;
+    }
+    setSelected((current) =>
+      current && !result.data.some((item) => item.id === current.id) ? null : current,
+    );
+  }, [result]);
+
+  // On small screens, bring the details panel into view after selecting.
+  useEffect(() => {
+    if (!selected || typeof window === 'undefined') {
+      return;
+    }
+    if (window.matchMedia('(min-width: 900px)').matches) {
+      return;
+    }
+    detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [selected]);
+
   // Auto-dismiss transient feedback.
   useEffect(() => {
     if (!feedback) {
@@ -123,7 +157,10 @@ export default function ContactRequestsPage() {
       const updated = await updateContactRequestStatus(request.id, next);
       setResult((current) =>
         current
-          ? { ...current, data: current.data.map((item) => (item.id === updated.id ? updated : item)) }
+          ? {
+              ...current,
+              data: current.data.map((item) => (item.id === updated.id ? updated : item)),
+            }
           : current,
       );
       setSelected((current) => (current && current.id === updated.id ? updated : current));
@@ -181,6 +218,10 @@ export default function ContactRequestsPage() {
               </button>
             ))}
           </div>
+
+          {result ? (
+            <span className="dash-contacts__count">إجمالي الطلبات: {total.toLocaleString('en-US')}</span>
+          ) : null}
         </div>
 
         {feedback ? (
@@ -192,183 +233,192 @@ export default function ContactRequestsPage() {
           </p>
         ) : null}
 
-        {loading ? (
-          <DataStatePanel
-            variant="loading"
-            title="جارٍ تحميل الطلبات…"
-            description="المرجو الانتظار قليلاً."
-          />
-        ) : error ? (
-          <DataStatePanel
-            variant="error"
-            title="تعذّر تحميل الطلبات"
-            description={error}
-            action={
-              <button type="button" className="btn btn--primary btn--md" onClick={() => void load()}>
-                <span className="btn__label">إعادة المحاولة</span>
-              </button>
-            }
-          />
-        ) : requests.length === 0 ? (
-          <DataStatePanel
-            variant="empty"
-            title="لا توجد طلبات اتصال"
-            description="ستظهر هنا الرسائل الواردة من نموذج الاتصال في الموقع."
-          />
-        ) : (
-          <>
-            <ul className="dash-contacts__list">
-              {requests.map((request) => (
-                <li className="dash-contacts__row" key={request.id}>
-                  <div className="dash-contacts__main">
-                    <p className="dash-contacts__name">{request.name}</p>
-                    <p className="dash-contacts__email">{request.email}</p>
-                    {request.phone ? (
-                      <p className="dash-contacts__phone">{request.phone}</p>
-                    ) : null}
-                    {request.subject ? (
-                      <p className="dash-contacts__subject">{request.subject}</p>
-                    ) : null}
-                    <p className="dash-contacts__preview">{previewOf(request.message)}</p>
-                  </div>
+        <div className="dash-contacts__layout">
+          <div className="dash-contacts__list-col">
+            {loading ? (
+              <DataStatePanel
+                variant="loading"
+                title="جارٍ تحميل الطلبات…"
+                description="المرجو الانتظار قليلاً."
+              />
+            ) : error ? (
+              <DataStatePanel
+                variant="error"
+                title="تعذّر تحميل الطلبات"
+                description={error}
+                action={
+                  <button
+                    type="button"
+                    className="btn btn--primary btn--md"
+                    onClick={() => void load()}
+                  >
+                    <span className="btn__label">إعادة المحاولة</span>
+                  </button>
+                }
+              />
+            ) : requests.length === 0 ? (
+              <DataStatePanel
+                variant="empty"
+                title="لا توجد طلبات اتصال"
+                description="ستظهر هنا الرسائل الواردة من نموذج الاتصال في الموقع."
+              />
+            ) : (
+              <>
+                <ul className="dash-contacts__list">
+                  {requests.map((request) => (
+                    <li key={request.id}>
+                      <button
+                        type="button"
+                        className={`dash-contacts__row${
+                          selected?.id === request.id ? ' is-selected' : ''
+                        }`}
+                        aria-pressed={selected?.id === request.id}
+                        onClick={() => setSelected(request)}
+                      >
+                        <span className="dash-contacts__row-head">
+                          <span className="dash-contacts__name">{request.name}</span>
+                          <StatusBadge status={request.status} />
+                        </span>
+                        <span className="dash-contacts__row-line">{request.email}</span>
+                        {request.phone ? (
+                          <span className="dash-contacts__row-line">{request.phone}</span>
+                        ) : null}
+                        <span className="dash-contacts__row-preview">
+                          {request.subject || previewOf(request.message)}
+                        </span>
+                        <time className="dash-contacts__row-date" dateTime={request.created_at}>
+                          {formatDate(request.created_at)}
+                        </time>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
 
-                  <div className="dash-contacts__meta">
-                    <StatusBadge status={request.status} />
-                    <time className="dash-contacts__date" dateTime={request.created_at}>
-                      {formatDate(request.created_at)}
-                    </time>
+                {totalPages > 1 ? (
+                  <div className="dash-contacts__pagination">
                     <button
                       type="button"
                       className="btn btn--outline btn--sm"
-                      onClick={() => setSelected(request)}
+                      disabled={page <= 1}
+                      onClick={() => setPage((current) => Math.max(1, current - 1))}
                     >
-                      <span className="btn__label">عرض</span>
+                      <span className="btn__label">السابق</span>
+                    </button>
+                    <span className="dash-contacts__page-info">
+                      الصفحة {page} من {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn--outline btn--sm"
+                      disabled={page >= totalPages}
+                      onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                    >
+                      <span className="btn__label">التالي</span>
                     </button>
                   </div>
-                </li>
-              ))}
-            </ul>
-
-            {totalPages > 1 ? (
-              <div className="dash-contacts__pagination">
-                <button
-                  type="button"
-                  className="btn btn--outline btn--sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
-                >
-                  <span className="btn__label">السابق</span>
-                </button>
-                <span className="dash-contacts__page-info">
-                  الصفحة {page} من {totalPages}
-                </span>
-                <button
-                  type="button"
-                  className="btn btn--outline btn--sm"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                >
-                  <span className="btn__label">التالي</span>
-                </button>
-              </div>
-            ) : null}
-          </>
-        )}
-      </div>
-
-      {selected ? (
-        <div
-          className="dash-contacts__modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="dash-contact-detail-title"
-        >
-          <button
-            type="button"
-            className="dash-contacts__modal-backdrop"
-            aria-label="إغلاق التفاصيل"
-            onClick={() => setSelected(null)}
-          />
-
-          <div className="dash-contacts__modal-panel">
-            <div className="dash-contacts__modal-head">
-              <h3 className="dash-contacts__modal-title" id="dash-contact-detail-title">
-                {selected.subject || 'رسالة اتصال'}
-              </h3>
-              <button
-                type="button"
-                className="btn btn--ghost btn--sm"
-                onClick={() => setSelected(null)}
-              >
-                <span className="btn__label">إغلاق</span>
-              </button>
-            </div>
-
-            <dl className="dash-contacts__fields">
-              <div className="dash-contacts__field">
-                <dt>الاسم</dt>
-                <dd>{selected.name}</dd>
-              </div>
-              <div className="dash-contacts__field">
-                <dt>البريد الإلكتروني</dt>
-                <dd>
-                  <a href={`mailto:${selected.email}`}>{selected.email}</a>
-                </dd>
-              </div>
-              {selected.phone ? (
-                <div className="dash-contacts__field">
-                  <dt>رقم الهاتف</dt>
-                  <dd>
-                    <a href={`tel:${selected.phone}`}>{selected.phone}</a>
-                  </dd>
-                </div>
-              ) : null}
-              <div className="dash-contacts__field">
-                <dt>تاريخ الإرسال</dt>
-                <dd>{formatDate(selected.created_at)}</dd>
-              </div>
-              <div className="dash-contacts__field">
-                <dt>الحالة</dt>
-                <dd>
-                  <StatusBadge status={selected.status} />
-                </dd>
-              </div>
-            </dl>
-
-            <p className="dash-contacts__message">{selected.message}</p>
-
-            <div className="dash-contacts__detail-actions">
-              <button
-                type="button"
-                className="btn btn--outline btn--sm"
-                onClick={() => void copyEmail(selected.email)}
-              >
-                <span className="btn__label">نسخ البريد الإلكتروني</span>
-              </button>
-              <a className="btn btn--outline btn--sm" href={`mailto:${selected.email}`}>
-                <span className="btn__label">إرسال بريد</span>
-              </a>
-            </div>
-
-            <div className="dash-contacts__status-actions" role="group" aria-label="تغيير الحالة">
-              {STATUS_ORDER.map((status) => (
-                <button
-                  key={status}
-                  type="button"
-                  className={`dash-contacts__filter${
-                    selected.status === status ? ' is-active' : ''
-                  }`}
-                  disabled={isUpdating}
-                  aria-pressed={selected.status === status}
-                  onClick={() => void changeStatus(selected, status)}
-                >
-                  {STATUS_LABELS[status]}
-                </button>
-              ))}
-            </div>
+                ) : null}
+              </>
+            )}
           </div>
+
+          <aside
+            ref={detailRef}
+            className={`dash-contacts__detail${selected ? ' is-open' : ''}`}
+            aria-label="تفاصيل الطلب"
+          >
+            {selected ? (
+              <div className="dash-contacts__panel">
+                <div className="dash-contacts__panel-head">
+                  <h3 className="dash-contacts__panel-title">
+                    {selected.subject || 'بدون موضوع'}
+                  </h3>
+                  <button
+                    type="button"
+                    className="btn btn--ghost btn--sm"
+                    onClick={() => setSelected(null)}
+                  >
+                    <span className="btn__label">إغلاق</span>
+                  </button>
+                </div>
+
+                <dl className="dash-contacts__cards">
+                  <InfoCard label="الاسم الكامل" value={selected.name} />
+                  <InfoCard
+                    label="البريد الإلكتروني"
+                    value={<a href={`mailto:${selected.email}`}>{selected.email}</a>}
+                  />
+                  <InfoCard
+                    label="رقم الهاتف"
+                    value={
+                      selected.phone ? (
+                        <a href={`tel:${selected.phone}`}>{selected.phone}</a>
+                      ) : (
+                        <span className="dash-contacts__muted">غير متوفر</span>
+                      )
+                    }
+                  />
+                  <InfoCard
+                    label="الموضوع"
+                    value={
+                      selected.subject || <span className="dash-contacts__muted">بدون موضوع</span>
+                    }
+                  />
+                  <InfoCard label="تاريخ الإرسال" value={formatDate(selected.created_at)} />
+                  <div className="dash-contacts__card dash-contacts__card--status">
+                    <dt className="dash-contacts__card-label">حالة الطلب</dt>
+                    <dd className="dash-contacts__card-value">
+                      <div
+                        className="dash-contacts__status-control"
+                        role="group"
+                        aria-label="تغيير حالة الطلب"
+                      >
+                        {STATUS_ORDER.map((status) => (
+                          <button
+                            key={status}
+                            type="button"
+                            className={`dash-contacts__status-option${
+                              selected.status === status ? ' is-active' : ''
+                            }`}
+                            disabled={isUpdating}
+                            aria-pressed={selected.status === status}
+                            onClick={() => void changeStatus(selected, status)}
+                          >
+                            {STATUS_LABELS[status]}
+                          </button>
+                        ))}
+                      </div>
+                    </dd>
+                  </div>
+                </dl>
+
+                <div className="dash-contacts__message-section">
+                  <h4 className="dash-contacts__section-title">الرسالة</h4>
+                  <p className="dash-contacts__message">{selected.message}</p>
+                </div>
+
+                <div className="dash-contacts__detail-actions">
+                  <button
+                    type="button"
+                    className="btn btn--outline btn--sm"
+                    onClick={() => void copyEmail(selected.email)}
+                  >
+                    <span className="btn__label">نسخ البريد الإلكتروني</span>
+                  </button>
+                  <a className="btn btn--outline btn--sm" href={`mailto:${selected.email}`}>
+                    <span className="btn__label">إرسال بريد</span>
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="dash-contacts__panel dash-contacts__panel--empty">
+                <p className="dash-contacts__placeholder">
+                  اختر طلباً من القائمة لعرض تفاصيله.
+                </p>
+              </div>
+            )}
+          </aside>
         </div>
-      ) : null}
+      </div>
     </SectionPage>
   );
 }
