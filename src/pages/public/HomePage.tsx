@@ -116,9 +116,15 @@ const QUICK_LINKS: readonly {
     icon: UsersIcon,
   },
   {
-    title: 'مسابقة الصوت الذهبي',
+    title: 'المسابقات  ',
     description: 'شارك في مسابقاتنا الثقافية والفنية المميزة.',
     to: '/golden-voice',
+    icon: MicIcon,
+  },
+    {
+    title: 'اتصل بنا ',
+    description: ' قم بتواصل مع جمعية شمس وقدم استفساراتك.',
+    to: '/contact',
     icon: MicIcon,
   },
 ];
@@ -280,7 +286,7 @@ export default function HomePage() {
             </div>
 
             <div className="home-hero__actions">
-              <a className="btn btn--primary btn--lg" href="/membership">
+              <a className="btn btn--primary btn--lg btn--join" href="/membership">
                 انخرط معنا
               </a>
               <a className="btn btn--outline btn--lg" href="/contact">
@@ -388,6 +394,7 @@ export default function HomePage() {
                     استكشف
                   </a>
                 </div>
+                
               </div>
             ))}
           </div>

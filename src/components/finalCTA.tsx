@@ -43,7 +43,7 @@ export default function FinalCTA({
             <h2 className="final-cta__title">{title}</h2>
             <p className="final-cta__text">{text}</p>
             <div className="final-cta__actions">
-              <a className="btn btn--primary btn--lg" href={MEMBERSHIP_HREF}>
+              <a className="btn btn--primary btn--lg btn--join" href={MEMBERSHIP_HREF}>
                 {MEMBERSHIP_LABEL}
               </a>
               <a

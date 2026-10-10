@@ -19,7 +19,7 @@ export default function StoreHero() {
               <a className="btn btn--primary btn--lg" href="#featured-products">
                 تصفح المنتجات
               </a>
-              <a className="btn btn--outline btn--lg" href="/membership">
+              <a className="btn btn--outline btn--lg btn--join" href="/membership">
                 انخرط معنا
               </a>
             </div>

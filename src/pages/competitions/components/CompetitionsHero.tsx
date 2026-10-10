@@ -16,7 +16,7 @@ export default function CompetitionsHero() {
               قدراتها، وإبراز إبداعها، والمشاركة في تجارب مميزة.
             </p>
             <div className="page-hero__actions">
-              <a className="btn btn--primary btn--lg" href="/membership">
+              <a className="btn btn--primary btn--lg btn--join" href="/membership">
                 انخرط معنا
               </a>
               <a className="btn btn--outline btn--lg" href="#competitions-list-title">

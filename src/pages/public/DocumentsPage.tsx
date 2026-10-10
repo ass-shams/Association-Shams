@@ -72,7 +72,7 @@ export default function DocumentsPage() {
                 تجدون هنا الوثائق الرسمية لجمعية شمس، متاحة للاطلاع والتحميل بسهولة بصيغة PDF.
               </p>
               <div className="doc-hero__actions">
-                <a className="btn btn--primary btn--lg" href="/membership">
+                <a className="btn btn--primary btn--lg btn--join" href="/membership">
                   انخرط معنا
                 </a>
                 <a className="btn btn--outline btn--lg" href="/contact">
