@@ -5979,3 +5979,778 @@ a.footer-contact__value:hover {
     animation: none;
   }
 }
+
+/* ==========================================================================
+   16. MEMBERSHIP
+   ========================================================================== */
+
+.mem-page-hero {
+  margin-block-end: var(--sp-7);
+}
+
+/* --- 16.1 Landing: two primary choices --- */
+
+.membership-choices {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-5);
+  max-inline-size: 960px;
+  margin-inline: auto;
+}
+
+.membership-choice {
+  position: relative;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-6);
+  transition:
+    background-color var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+
+/* Secondary card (documents): white with subtle blue accents. */
+.membership-choice--secondary:hover {
+  border-color: var(--c-border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* Primary card (electronic membership): distinctive blue. */
+.membership-choice--primary {
+  background-color: var(--c-blue);
+  border-color: var(--c-blue);
+}
+
+.membership-choice--primary:hover {
+  background-color: var(--c-blue-hover);
+  border-color: var(--c-blue-hover);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.membership-choice--primary:focus-within {
+  border-color: var(--c-white);
+  box-shadow: var(--shadow-lg), 0 0 0 3px rgb(255 255 255 / 45%);
+}
+
+.membership-choice__icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 56px;
+  block-size: 56px;
+  margin-block-end: var(--sp-1);
+  border-radius: var(--r-lg);
+  background-color: var(--c-blue-tint);
+  color: var(--c-blue-strong);
+}
+
+.membership-choice--primary .membership-choice__icon {
+  background-color: var(--c-white);
+  color: var(--c-blue-strong);
+}
+
+/* Restrained yellow accent on the primary card only. */
+.membership-choice__accent {
+  position: absolute;
+  inset-block-start: -3px;
+  inset-inline-end: -3px;
+  inline-size: 12px;
+  block-size: 12px;
+  border-radius: var(--r-full);
+  background-color: var(--c-yellow);
+  box-shadow: 0 0 0 3px var(--c-blue);
+}
+
+.membership-choice__title {
+  margin: 0;
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-heading);
+  text-wrap: balance;
+}
+
+.membership-choice__text {
+  margin: 0;
+  color: var(--c-text-soft);
+  line-height: var(--lh-body);
+}
+
+.membership-choice--primary .membership-choice__title,
+.membership-choice--primary .membership-choice__text {
+  color: var(--c-white);
+}
+
+.membership-choice--primary .membership-choice__text {
+  font-size: var(--fs-body-sm);
+}
+
+.membership-choice__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  align-self: flex-start;
+  min-block-size: var(--tap-min);
+  margin-block-start: auto;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  font-size: var(--fs-button);
+  font-weight: var(--fw-semibold);
+  color: var(--c-blue-strong);
+  cursor: pointer;
+  text-align: start;
+}
+
+.membership-choice__cta svg {
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.membership-choice:hover .membership-choice__cta svg {
+  transform: translateX(-4px);
+}
+
+/* Primary CTA: contrasting white pill, with the yellow accent on hover. */
+.membership-choice--primary .membership-choice__cta {
+  padding-inline: var(--sp-5);
+  border-radius: var(--r-full);
+  background-color: var(--c-white);
+  color: var(--c-blue-strong);
+  transition:
+    background-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out);
+}
+
+.membership-choice--primary:hover .membership-choice__cta {
+  background-color: var(--c-yellow);
+  color: var(--c-text);
+}
+
+/* Stretched hit area: the whole card is clickable, but only this button is
+   interactive, so nothing is nested inside another control. */
+.membership-choice__cta::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-lg);
+}
+
+.membership-choice__cta:focus-visible {
+  outline: none;
+}
+
+.membership-choice--secondary:hover .membership-choice__cta {
+  color: var(--c-blue-hover);
+}
+
+/* --- 16.2 Internal view return action --- */
+
+.mem-back {
+  margin-block-end: var(--sp-4);
+}
+
+.mem-back__button {
+  padding-inline: var(--sp-3);
+}
+
+/* --- 16.3 Documents view --- */
+
+/* Audio guide */
+.mem-audio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-block-end: var(--sp-6);
+  padding: var(--sp-5);
+  background-color: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.mem-audio__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.mem-audio__icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: var(--r-full);
+  background-color: var(--c-blue-tint);
+  color: var(--c-blue-strong);
+}
+
+.mem-audio__title {
+  margin: 0;
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+}
+
+.mem-audio__text {
+  margin: 0;
+  color: var(--c-text-soft);
+  line-height: var(--lh-body);
+}
+
+.mem-audio__player {
+  inline-size: 100%;
+  max-inline-size: 100%;
+}
+
+/* In-person submission notice (subtle yellow accent). */
+.mem-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  margin-block-end: var(--sp-6);
+  padding: var(--sp-5);
+  background-color: var(--c-yellow-soft);
+  border: 1px solid var(--c-border);
+  border-inline-start: 4px solid var(--c-yellow);
+  border-radius: var(--r-lg);
+}
+
+.mem-notice__icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--r-full);
+  background-color: var(--c-yellow);
+  color: var(--c-text);
+}
+
+.mem-notice__body {
+  min-inline-size: 0;
+}
+
+.mem-notice__title {
+  margin: 0 0 var(--sp-1);
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+}
+
+.mem-notice__text {
+  margin: 0;
+  color: var(--c-text);
+  line-height: var(--lh-body);
+}
+
+.mem-doc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+.mem-doc-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  min-inline-size: 0;
+}
+
+/* Slightly more generous spacing inside the document cards. */
+.mem-doc-card .card__body {
+  gap: var(--sp-4);
+}
+
+.mem-doc-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+}
+
+.mem-doc-card__icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: var(--r-md);
+  background-color: var(--c-blue-tint);
+  color: var(--c-blue-strong);
+}
+
+.mem-doc-card__icon--accent {
+  background-color: var(--c-yellow-soft);
+  color: var(--c-warning);
+}
+
+.mem-doc-card__title {
+  margin: 0;
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-heading);
+}
+
+.mem-doc-card__intro {
+  margin: var(--sp-1) 0 0;
+  color: var(--c-text-soft);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-compact);
+}
+
+/* Age-specific lists inside the visual impairment card. */
+.mem-vi-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.mem-vi-group + .mem-vi-group {
+  padding-block-start: var(--sp-4);
+  border-block-start: 1px solid var(--c-border);
+}
+
+.mem-vi-group__title {
+  margin: 0;
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+}
+
+.mem-checklist {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mem-checklist__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  line-height: var(--lh-compact);
+}
+
+.mem-checklist__mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 24px;
+  block-size: 24px;
+  margin-block-start: 1px;
+  border-radius: var(--r-full);
+  background-color: var(--c-blue-tint);
+  color: var(--c-blue-strong);
+}
+
+.mem-checklist__text {
+  color: var(--c-text);
+}
+
+/* Parental consent subsection (lives inside the children card) */
+.mem-consent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background-color: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+}
+
+.mem-consent__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+}
+
+.mem-consent__icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: var(--r-md);
+  background-color: var(--c-danger-tint);
+  color: var(--c-danger-text);
+}
+
+.mem-consent__title {
+  margin: 0 0 var(--sp-1);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-semibold);
+}
+
+.mem-consent__text {
+  margin: 0;
+  color: var(--c-text-soft);
+  line-height: var(--lh-body);
+}
+
+.mem-consent__note {
+  margin: var(--sp-2) 0 0;
+  color: var(--c-text-soft);
+  font-size: var(--fs-small);
+  line-height: var(--lh-compact);
+}
+
+/* Shared fee card (applies to all categories) */
+.mem-fee {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-block-start: var(--sp-6);
+  padding: var(--sp-5);
+  background-color: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-inline-start: 4px solid var(--c-yellow);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.mem-fee__icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: var(--r-full);
+  background-color: var(--c-yellow);
+  color: var(--c-text);
+}
+
+.mem-fee__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-inline-size: 0;
+}
+
+.mem-fee__amount {
+  margin: 0;
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-bold);
+  color: var(--c-text);
+}
+
+.mem-fee__note {
+  margin: 0;
+  color: var(--c-text-soft);
+  line-height: var(--lh-compact);
+}
+
+/* --- 16.4 Electronic form --- */
+
+.mem-form-wrap {
+  max-inline-size: 760px;
+  margin-inline: auto;
+}
+
+/* Main form card */
+.mem-form {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(var(--sp-5), 3vw, var(--sp-7));
+  background-color: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.mem-section {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* Subtle separators between the major sections. */
+.mem-section + .mem-section {
+  margin-block-start: var(--sp-6);
+  padding-block-start: var(--sp-6);
+  border-block-start: 1px solid var(--c-border);
+}
+
+.mem-section__legend {
+  padding-inline-start: var(--sp-3);
+  border-inline-start: 4px solid var(--c-blue);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  color: var(--c-text);
+}
+
+.mem-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  margin-block-start: var(--sp-4);
+}
+
+.mem-form__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-4);
+}
+
+.mem-form__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-block-start: var(--sp-6);
+  padding-block-start: var(--sp-6);
+  border-block-start: 1px solid var(--c-border);
+}
+
+/* Keep phone and age readable left-to-right while the field stays RTL-aligned. */
+.mem-form input[type='tel'],
+.mem-form input[inputmode='numeric'] {
+  direction: ltr;
+  text-align: right;
+}
+
+.mem-form .field--with-icon input[type='tel'],
+.mem-form .field--with-icon input[inputmode='numeric'] {
+  padding-inline-start: var(--sp-4);
+  padding-inline-end: calc(var(--sp-4) + 26px);
+}
+
+.field__hint {
+  color: var(--c-text-soft);
+}
+
+/* Choice controls (gender radio + interests checkboxes) */
+.mem-choice-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.mem-choice-group__legend {
+  padding: 0;
+}
+
+.mem-choice-group__hint {
+  margin: 0;
+  color: var(--c-text-soft);
+  font-size: var(--fs-small);
+}
+
+.mem-choice-group__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+/* Gender: two even options that line up with the personal-information grid. */
+.mem-choice-group--gender .mem-choice-group__options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Interests keep wrapping chips on mobile (see responsive upgrades). */
+
+.choice {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-block-size: var(--tap-min);
+  padding: var(--sp-2) var(--sp-4);
+  background-color: var(--c-white);
+  border: 1px solid var(--c-border-input);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard);
+}
+
+.choice:hover {
+  border-color: var(--c-border-strong);
+}
+
+.choice:focus-within {
+  border-color: var(--c-blue-strong);
+  box-shadow: var(--focus-ring);
+}
+
+.choice--selected {
+  background-color: var(--c-blue-tint);
+  border-color: var(--c-blue-strong);
+}
+
+.choice--selected .choice__label {
+  color: var(--c-blue-text);
+}
+
+.choice:has(.choice__input[aria-invalid='true']) {
+  border-color: var(--c-danger);
+}
+
+.choice__input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.choice__control {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 20px;
+  block-size: 20px;
+  border: 2px solid var(--c-border-strong);
+}
+
+.choice--radio .choice__control {
+  border-radius: var(--r-full);
+}
+
+.choice--checkbox .choice__control {
+  border-radius: var(--r-xs);
+}
+
+.choice--selected .choice__control {
+  border-color: var(--c-blue-strong);
+}
+
+.choice--radio.choice--selected .choice__control::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: var(--r-full);
+  background-color: var(--c-blue-strong);
+}
+
+.choice--checkbox.choice--selected .choice__control {
+  background-color: var(--c-blue-strong);
+}
+
+.choice--checkbox.choice--selected .choice__control::after {
+  content: '';
+  inline-size: 5px;
+  block-size: 9px;
+  border: solid var(--c-white);
+  border-width: 0 0 2px 2px;
+  transform: rotate(-45deg) translateY(-1px);
+}
+
+.choice__label {
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-compact);
+}
+
+/* --- 16.5 Frontend-only informational state --- */
+
+.mem-info-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  max-inline-size: 640px;
+  margin-inline: auto;
+  padding: clamp(var(--sp-6), 4vw, var(--sp-8));
+  background-color: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.mem-info-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 56px;
+  block-size: 56px;
+  border-radius: var(--r-full);
+  background-color: var(--c-blue-tint);
+  color: var(--c-blue-strong);
+}
+
+.mem-info-card__title {
+  margin: 0;
+  font-size: var(--fs-h2);
+}
+
+.mem-info-card__text {
+  margin: 0;
+  color: var(--c-text);
+  font-weight: var(--fw-medium);
+}
+
+.mem-info-card__note {
+  margin: 0;
+  max-inline-size: var(--container-prose);
+  color: var(--c-text-soft);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+}
+
+/* --- 16.6 Responsive upgrades --- */
+
+@media (width >= 640px) {
+  .mem-form__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Interests: a balanced grid on wider screens. */
+  .mem-choice-group--interests .mem-choice-group__options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  }
+
+  .mem-form__actions {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+@media (width >= 720px) {
+  .membership-choices {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width >= 900px) {
+  .mem-doc-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .membership-choice:hover,
+  .membership-choice--primary:hover,
+  .membership-choice--secondary:hover {
+    transform: none;
+  }
+
+  .membership-choice:hover .membership-choice__cta svg {
+    transform: none;
+  }
+}

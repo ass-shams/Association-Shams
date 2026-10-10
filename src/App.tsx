@@ -29,10 +29,10 @@ function ScrollToTop() {
 
 /**
  * Routes that deliberately omit the global footer. The Golden Voice
- * registration page is a focused, single-task flow, so the footer is hidden
- * there while every other public page keeps it.
+ * registration page and the membership experience are focused, single-task
+ * flows, so the footer is hidden there while every other public page keeps it.
  */
-const FOOTER_HIDDEN_ROUTES = new Set(['/competitions/golden-voice']);
+const FOOTER_HIDDEN_ROUTES = new Set(['/competitions/golden-voice', '/membership']);
 
 /** Renders the shared footer except on routes that opt out. */
 function SiteFooter() {
