@@ -55,8 +55,10 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
 
   // Verify the competition is accepting registrations before doing any work.
   const gate = await resolveGoldenVoiceRegistrationGate();
-  if (!gate.ok) {
-    if (gate.reason === 'not-open') {
+  if (gate.ok === false) {
+    // Explicit discriminant narrowing keeps the failure branch type-safe.
+    const { reason } = gate;
+    if (reason === 'not-open') {
       return sendJson(res, 403, { message: REGISTRATION_CLOSED_MESSAGE });
     }
     // Missing competition row or database failure: fail closed.
@@ -115,7 +117,7 @@ async function registerWithVideo(
   }
 
   const verification = await verifyVideo(videoPath);
-  if (!verification.ok) {
+  if (verification.ok === false) {
     await removeObject(videoPath);
     return sendJson(res, 400, { message: verification.message });
   }

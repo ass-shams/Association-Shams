@@ -3,6 +3,8 @@ import type { ServerResponse } from 'node:http';
 
 const state = vi.hoisted(() => ({
   adminThrows: false,
+  userThrows: false,
+  rowThrows: false,
   user: null as { id: string; email: string | null } | null,
   userError: null as { message?: string } | null,
   adminRow: null as { user_id: string } | null,
@@ -17,15 +19,25 @@ vi.mock('./supabaseAdmin.js', () => ({
 
     return {
       auth: {
-        getUser: async (_token: string) => ({
-          data: { user: state.user },
-          error: state.userError,
-        }),
+        getUser: async (_token: string) => {
+          if (state.userThrows) {
+            throw new Error('auth network failure');
+          }
+          return {
+            data: { user: state.user },
+            error: state.userError,
+          };
+        },
       },
       from: () => ({
         select: () => ({
           eq: () => ({
-            maybeSingle: async () => ({ data: state.adminRow, error: state.rowError }),
+            maybeSingle: async () => {
+              if (state.rowThrows) {
+                throw new Error('database network failure');
+              }
+              return { data: state.adminRow, error: state.rowError };
+            },
           }),
         }),
       }),
@@ -68,6 +80,8 @@ function request(authorization?: string) {
 
 beforeEach(() => {
   state.adminThrows = false;
+  state.userThrows = false;
+  state.rowThrows = false;
   state.user = null;
   state.userError = null;
   state.adminRow = null;
@@ -114,6 +128,19 @@ describe('resolveAdmin', () => {
     const result = await resolveAdmin(request('Bearer good-token'));
     expect(result.status).toBe('unavailable');
   });
+
+  it('reports unavailable when the token verification throws', async () => {
+    state.userThrows = true;
+    const result = await resolveAdmin(request('Bearer good-token'));
+    expect(result.status).toBe('unavailable');
+  });
+
+  it('reports unavailable when the allowlist lookup throws', async () => {
+    state.user = { id: 'admin-1', email: 'admin@example.com' };
+    state.rowThrows = true;
+    const result = await resolveAdmin(request('Bearer good-token'));
+    expect(result.status).toBe('unavailable');
+  });
 });
 
 describe('requireAdmin', () => {
@@ -140,5 +167,13 @@ describe('requireAdmin', () => {
     expect(admin).toEqual({ id: 'admin-1', email: 'admin@example.com' });
     expect(fake.status).toBe(0);
     expect(fake.json).toBeNull();
+  });
+
+  it('sends 503 (not 500) when authorization cannot be resolved', async () => {
+    state.userThrows = true;
+    const fake = createResponse();
+    const admin = await requireAdmin(request('Bearer good-token'), fake.res);
+    expect(admin).toBeNull();
+    expect(fake.status).toBe(503);
   });
 });

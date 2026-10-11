@@ -135,28 +135,43 @@ const ACTIVITIES: readonly {
   icon: IconComponent;
 }[] = [
   {
-    title: 'الدورات التدريبية والتعليمية',
-    text: 'ورشات مجانية لتعلم وإتقان قراءة وكتابة طريقة برايل، بالإضافة إلى تعلم مهارات استخدام الحاسوب والتقنيات التعويضية والإعلاميات.',
+    title: 'أنشطة تربوية',
+    text: 'أنشطة وبرامج تربوية تهدف إلى التعلم وتنمية الوعي والمهارات في أجواء محفزة.',
     icon: BookOpenIcon,
   },
   {
-    title: 'التكوين التكنولوجي والرقمنة',
-    text: 'تدريب الأشخاص في وضعية إعاقة بصرية على استخدام الهواتف الذكية والتقنيات الميسّرة لمواكبة التطور التكنولوجي.',
+    title: 'أنشطة ترفيهية',
+    text: 'أنشطة ترفيهية متنوعة توفر أجواء ممتعة وتشجع على التفاعل والمشاركة.',
     icon: SmartphoneIcon,
   },
   {
-    title: 'ورشات الحرف اليدوية والصناعة التقليدية',
-    text: 'ورشات تفاعلية لتعليم مهارات الصياغة والتركيب، وتمكين المستفيدين من تطوير مهاراتهم وإبراز قدراتهم الإبداعية.',
+    title: 'رحلات',
+    text: 'رحلات وخرجات تتيح للمستفيدين اكتشاف محيطهم والاستمتاع بتجارب جماعية جديدة.',
     icon: ScissorsIcon,
   },
   {
-    title: 'الأنشطة التربوية والترفيهية للأطفال',
-    text: 'صبيحات تربوية وتشجيعية للأطفال، تشمل الأناشيد والألعاب والورشات التفاعلية، إضافة إلى المخيمات والخرجات الاستكشافية.',
+    title: 'مخيمات',
+    text: 'مخيمات تجمع بين الترفيه والتعلم والتفاعل، وتوفر تجارب جماعية غنية للمستفيدين.',
+    icon: SmileIcon,
+  },
+    {
+    title: 'دورات تكوينية',
+    text: 'دورات وورشات تساعد على اكتساب معارف ومهارات جديدة وتطوير القدرات.',
     icon: SmileIcon,
   },
   {
-    title: 'اللقاءات الثقافية والتوعوية',
-    text: 'تنظيم لقاءات وأمسيات ثقافية وفنية وتخليد المناسبات الخاصة بالمكفوفين وضعاف البصر بهدف نشر الوعي وتعزيز الإدماج.',
+    title: 'مبادرات اجتماعية ',
+    text: 'مبادرات تهدف إلى تعزيز التضامن والمشاركة وخدمة المجتمع.',
+    icon: MessagesSquareIcon,
+  },
+    {
+    title: 'تقوية المهارات والقدرات ',
+    text: 'برامج وأنشطة تساعد المستفيدين على تطوير مهاراتهم وقدراتهم وتعزيز استقلاليتهم.',
+    icon: MessagesSquareIcon,
+  },
+    {
+    title: 'أنشطة فنية ',
+    text: 'أنشطة فنية تفتح المجال أمام التعبير والإبداع واكتشاف المواهب.',
     icon: MessagesSquareIcon,
   },
 ];
@@ -408,7 +423,7 @@ export default function HomePage() {
             <div className="about-preview__text">
               <div className="section-heading about-preview__heading">
                 <p className="section-heading__eyebrow">من نحن</p>
-                <h2 className="section-heading__title">عن الجمعية</h2>
+                <h2 className="section-heading__title">ماهي جمعية شمس للكفيف و المبصر ؟</h2>
                 <p className="section-heading__lead">
                   جمعية شمس للكفيف والمبصر هي منظمة مغربية رائدة تأسست بمدينة بني ملال، وتشكّل
                   جسراً تضامنياً يهدف إلى تحقيق الإدماج الشامل للمكفوفين وضعاف البصر داخل المجتمع
@@ -420,9 +435,6 @@ export default function HomePage() {
                   فاعلة ومستقلة في محيطهم.
                 </p>
               </div>
-              <a className="btn btn--outline btn--md" href="/about">
-                اقرأ المزيد
-              </a>
             </div>
             <div className="about-preview__media">
               <div className="video-embed">
@@ -444,7 +456,7 @@ export default function HomePage() {
       <section className="section section--muted section--pad-default">
         <div className="container">
           <div className="section-heading">
-            <h2 className="section-heading__title">أنشطتنا</h2>
+            <h2 className="section-heading__title"> أنشطة جمعية شمس للكفيف و المبصر</h2>
             <p className="section-heading__lead">
               تتنوع أنشطة الجمعية لتشمل مجالات تعليمية، وتقنية، وتربوية، واجتماعية تسعى كلها
               إلى دمج الكفيف في محيطه.
@@ -457,9 +469,7 @@ export default function HomePage() {
                   <span className="activity-card__number" aria-hidden="true">
                     {String(index + 1).padStart(2, '0')}
                   </span>
-                  <span className="activity-card__icon" aria-hidden="true">
-                    <item.icon />
-                  </span>
+
                 </div>
                 <h3 className="activity-card__title">{item.title}</h3>
                 <p className="activity-card__text">{item.text}</p>

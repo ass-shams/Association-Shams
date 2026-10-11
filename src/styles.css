@@ -1129,6 +1129,7 @@ a.footer-contact__value:hover {
 .section-heading__lead {
   margin: 0;
   color: var(--c-text-soft);
+  text-align: justify;
   line-height: var(--lh-body);
 }
 
@@ -2188,6 +2189,7 @@ a.footer-contact__value:hover {
     inline-size: 100%;
     padding-inline: var(--sp-4);
   }
+
 }
 
 /* ==========================================================================
@@ -3477,18 +3479,7 @@ a.footer-contact__value:hover {
   border-block-end: 1px solid var(--c-border);
 }
 
-.act-hero::after {
-  content: '';
-  position: absolute;
-  inset-block-start: -96px;
-  inset-inline-end: -72px;
-  inline-size: clamp(180px, 22vw, 300px);
-  block-size: clamp(180px, 22vw, 300px);
-  border-radius: var(--r-full);
-  background-color: var(--c-yellow-soft);
-  opacity: 0.6;
-  pointer-events: none;
-}
+
 
 .act-hero__inner {
   position: relative;
@@ -3530,11 +3521,7 @@ a.footer-contact__value:hover {
 .act-hero__media {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 4 / 3;
-  border: 6px solid var(--c-white);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-lg);
-  background-color: var(--c-bg);
+
 }
 
 .act-hero__media img {

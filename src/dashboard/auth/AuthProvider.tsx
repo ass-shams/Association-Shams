@@ -95,7 +95,14 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       resolvedTokenRef.current = null;
       setUser(null);
       setAdmin(null);
-      await client.auth.signOut();
+      try {
+        await client.auth.signOut();
+      } catch {
+        /*
+         * Local revocation is best effort. A failed `signOut` (for example a
+         * held auth lock) must not leave the UI authenticated or stuck.
+         */
+      }
       setStatus('unauthenticated');
       return;
     }
@@ -195,13 +202,22 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     const client = clientRef.current;
     resolvedTokenRef.current = null;
-    if (client) {
-      await client.auth.signOut();
+    try {
+      if (client) {
+        await client.auth.signOut();
+      }
+    } catch {
+      /*
+       * Local revocation is best effort. Clearing the in-memory state in the
+       * `finally` below guarantees the dashboard is never left looking
+       * authenticated after the administrator chose to sign out.
+       */
+    } finally {
+      setUser(null);
+      setAdmin(null);
+      setError(null);
+      setStatus('unauthenticated');
     }
-    setUser(null);
-    setAdmin(null);
-    setError(null);
-    setStatus('unauthenticated');
   }, []);
 
   const retry = useCallback(async () => {

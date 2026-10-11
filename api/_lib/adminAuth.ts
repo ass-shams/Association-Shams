@@ -56,28 +56,46 @@ export async function resolveAdmin(req: ApiRequest): Promise<AdminAuthResult> {
     return { status: 'unavailable' };
   }
 
-  const { data: userData, error: userError } = await adminClient.auth.getUser(token);
-  if (userError || !userData?.user) {
-    return { status: 'unauthenticated' };
-  }
-
-  const { data: row, error: rowError } = await adminClient
-    .from(ADMIN_TABLE)
-    .select('user_id')
-    .eq('user_id', userData.user.id)
-    .maybeSingle();
-
-  if (rowError) {
+  /*
+   * A thrown SDK/network error (as opposed to a returned `{ error }`) must not
+   * become an unhandled rejection: the caller would send a raw 500 instead of
+   * the documented 503, and the dashboard would surface a generic failure.
+   * Any exception is therefore reported as `unavailable`.
+   */
+  let userId: string;
+  let email: string | null;
+  try {
+    const { data: userData, error: userError } = await adminClient.auth.getUser(token);
+    if (userError || !userData?.user) {
+      return { status: 'unauthenticated' };
+    }
+    userId = userData.user.id;
+    email = userData.user.email ?? null;
+  } catch {
     return { status: 'unavailable' };
   }
 
-  if (!row) {
-    return { status: 'forbidden' };
+  try {
+    const { data: row, error: rowError } = await adminClient
+      .from(ADMIN_TABLE)
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (rowError) {
+      return { status: 'unavailable' };
+    }
+
+    if (!row) {
+      return { status: 'forbidden' };
+    }
+  } catch {
+    return { status: 'unavailable' };
   }
 
   return {
     status: 'ok',
-    admin: { id: userData.user.id, email: userData.user.email ?? null },
+    admin: { id: userId, email },
   };
 }
 
