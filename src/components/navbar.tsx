@@ -51,7 +51,7 @@ export default function Navbar() {
     <header className="site-header">
       <div className="site-header__inner">
         <NavLink className="site-brand" to="/" onClick={closeMenu}>
-          <img src={logo} alt="جمعية شمس" />
+          <img src={logo} alt="جمعية شمس" width={380} height={80} decoding="async" />
         </NavLink>
 
         <nav className="site-nav" aria-label="التنقل الرئيسي">

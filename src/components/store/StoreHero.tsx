@@ -28,7 +28,11 @@ export default function StoreHero() {
           <div className="store-hero__media">
             <img
               src={storeHeroImage.src}
+              srcSet={storeHeroImage.srcSet}
+              sizes={storeHeroImage.sizes}
               alt={storeHeroImage.alt}
+              width={1200}
+              height={1200}
               loading="eager"
               fetchPriority="high"
               decoding="async"

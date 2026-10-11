@@ -24,6 +24,24 @@
   ],
   "headers": [
     {
+      "source": "/(logo.png|icons.svg)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    },
+    {
+      "source": "/(documents|voises)/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, stale-while-revalidate=2592000"
+        }
+      ]
+    },
+    {
       "source": "/(.*)",
       "has": [
         {

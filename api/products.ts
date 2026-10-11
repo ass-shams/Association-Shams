@@ -38,5 +38,10 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
   }
 
   const rows = Array.isArray(data) ? (data as Record<string, unknown>[]) : [];
-  return sendJson(res, 200, { data: rows.map(mapProductRow) });
+  return sendJson(
+    res,
+    200,
+    { data: rows.map(mapProductRow) },
+    { cacheControl: 'public, s-maxage=60, stale-while-revalidate=300' },
+  );
 }

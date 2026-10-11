@@ -35,6 +35,10 @@ export type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock'
 
 export interface ProductImage {
   src: string
+  /** Optional responsive variants (`<img srcset>`) when the source supports it. */
+  srcSet?: string
+  /** Original URL used if an optimised `src`/`srcSet` fails to load. */
+  fallbackSrc?: string
   alt: string
   /** Optional CSS object-position used when the gallery crops the image. */
   position?: string

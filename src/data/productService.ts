@@ -43,10 +43,52 @@ export interface ApiProduct {
 const ENDPOINT = '/api/products';
 const LOAD_ERROR = 'تعذّر تحميل المنتجات. المرجو المحاولة مرة أخرى.';
 
+/** Supabase Storage public-object path and its on-the-fly transform path. */
+const STORAGE_OBJECT_PATH = '/storage/v1/object/public/';
+const STORAGE_RENDER_PATH = '/storage/v1/render/image/public/';
+/** Raster formats Supabase can safely transform (animated GIFs are left as-is). */
+const TRANSFORMABLE_IMAGE = /\.(png|jpe?g|webp)(\?.*)?$/i;
+
+/** True when a managed product image can be served through Supabase transforms. */
+function isTransformableProductImage(src: string): boolean {
+  return src.includes(STORAGE_OBJECT_PATH) && TRANSFORMABLE_IMAGE.test(src);
+}
+
+/**
+ * Builds a Supabase Storage transformation URL for a managed product image.
+ *
+ * Product photos are uploaded at full camera resolution (often 2000×2000 PNGs,
+ * ~360 KB each). Serving them through Supabase's on-the-fly transform endpoint
+ * as bounded WebP cuts them by >85% without touching the stored original. URLs
+ * that are not our own bucket, or are animated GIFs, are returned untouched.
+ */
+export function productImageVariant(src: string, width: number): string {
+  if (!isTransformableProductImage(src)) {
+    return src;
+  }
+  const base = src.split('?')[0].replace(STORAGE_OBJECT_PATH, STORAGE_RENDER_PATH);
+  return `${base}?width=${width}&height=${width}&resize=contain&quality=80&format=webp`;
+}
+
+/** Builds the display image (with responsive variants) for a managed product. */
+function buildProductImage(src: string, alt: string): ProductImage {
+  if (!isTransformableProductImage(src)) {
+    return { src, alt };
+  }
+  return {
+    src: productImageVariant(src, 800),
+    srcSet: [400, 800, 1200]
+      .map((width) => `${productImageVariant(src, width)} ${width}w`)
+      .join(', '),
+    fallbackSrc: src,
+    alt,
+  };
+}
+
 /** Map a managed product to the storefront `Product` shape. */
 export function mapApiProduct(item: ApiProduct): Product {
   const image: ProductImage | null = item.imageUrl
-    ? { src: item.imageUrl, alt: item.name }
+    ? buildProductImage(item.imageUrl, item.name)
     : null;
 
   return {

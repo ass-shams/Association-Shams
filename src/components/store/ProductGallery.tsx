@@ -46,11 +46,21 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
         <img
           key={active.src}
           src={active.src}
+          srcSet={active.srcSet}
+          sizes="(min-width: 1024px) 560px, (min-width: 640px) 48vw, 92vw"
           alt={active.alt}
           style={active.position ? { objectPosition: active.position } : undefined}
           loading="eager"
+          fetchPriority="high"
           decoding="async"
           draggable={false}
+          onError={(event) => {
+            const fallback = active.fallbackSrc;
+            if (fallback && event.currentTarget.src !== fallback) {
+              event.currentTarget.removeAttribute('srcset');
+              event.currentTarget.src = fallback;
+            }
+          }}
         />
 
         {hasMultiple ? (
@@ -90,7 +100,22 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
                 aria-label={`عرض الصورة ${index + 1}`}
                 aria-current={index === safeIndex ? 'true' : undefined}
               >
-                <img src={image.src} alt="" loading="lazy" decoding="async" draggable={false} />
+                <img
+                  src={image.src}
+                  srcSet={image.srcSet}
+                  sizes="80px"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  draggable={false}
+                  onError={(event) => {
+                    const fallback = image.fallbackSrc;
+                    if (fallback && event.currentTarget.src !== fallback) {
+                      event.currentTarget.removeAttribute('srcset');
+                      event.currentTarget.src = fallback;
+                    }
+                  }}
+                />
               </button>
             </li>
           ))}

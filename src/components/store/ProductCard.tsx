@@ -29,11 +29,20 @@ export default function ProductCard({ product, rank }: ProductCardProps) {
         {image ? (
           <img
             src={image.src}
+            srcSet={image.srcSet}
+            sizes="(min-width: 1024px) 280px, (min-width: 640px) 45vw, 90vw"
             alt={image.alt}
             style={image.position ? { objectPosition: image.position } : undefined}
             loading="lazy"
             decoding="async"
             draggable={false}
+            onError={(event) => {
+              const fallback = image.fallbackSrc;
+              if (fallback && event.currentTarget.src !== fallback) {
+                event.currentTarget.removeAttribute('srcset');
+                event.currentTarget.src = fallback;
+              }
+            }}
           />
         ) : null}
 

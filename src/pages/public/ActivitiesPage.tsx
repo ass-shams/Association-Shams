@@ -247,7 +247,11 @@ export default function ActivitiesPage() {
             <div className="act-hero__media">
               <img
                 src={hero.src}
+                srcSet={hero.srcSet}
+                sizes={hero.sizes}
                 alt={hero.alt}
+                width={1200}
+                height={1200}
                 style={hero.position ? { objectPosition: hero.position } : undefined}
                 loading="eager"
                 fetchPriority="high"

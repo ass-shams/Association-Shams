@@ -25,11 +25,25 @@ export interface ApiRequest extends IncomingMessage {
 /** Vercel Node.js response (a Node `ServerResponse`). */
 export type ApiResponse = ServerResponse;
 
+/** Options for `sendJson`. */
+export interface SendJsonOptions {
+  /**
+   * `Cache-Control` header value. Defaults to `no-store`; public read-only
+   * endpoints may opt into a short shared (CDN) cache instead.
+   */
+  readonly cacheControl?: string;
+}
+
 /** Send a JSON response without exposing any server internals. */
-export function sendJson(res: ApiResponse, statusCode: number, payload: unknown): void {
+export function sendJson(
+  res: ApiResponse,
+  statusCode: number,
+  payload: unknown,
+  options: SendJsonOptions = {},
+): void {
   res.statusCode = statusCode;
   res.setHeader('content-type', 'application/json; charset=utf-8');
-  res.setHeader('cache-control', 'no-store');
+  res.setHeader('cache-control', options.cacheControl ?? 'no-store');
   res.end(JSON.stringify(payload));
 }
 

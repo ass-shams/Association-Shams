@@ -1,4 +1,5 @@
 import heroImage from '@/assets/competitions-images/hero-image.webp';
+import heroImageSmall from '@/assets/competitions-images/hero-image-800.webp';
 
 /** Hero for the dedicated competitions page — eyebrow, headline, description, actions and image. */
 export default function CompetitionsHero() {
@@ -28,6 +29,8 @@ export default function CompetitionsHero() {
           <div className="competitions-hero__media">
             <img
               src={heroImage}
+              srcSet={`${heroImageSmall} 800w, ${heroImage} 1200w`}
+              sizes="(min-width: 900px) 520px, 92vw"
               alt="صورة توضيحية لمسابقات جمعية شمس"
               width={1200}
               height={1200}

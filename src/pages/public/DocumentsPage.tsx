@@ -3,6 +3,7 @@ import Breadcrumb from '@/components/Breadcrumb';
 import FinalCTA from '@/components/finalCTA';
 import { documents } from '@/data/documents';
 import heroImage from '@/assets/documents-images/hero-img.webp';
+import heroImageSmall from '@/assets/documents-images/hero-img-800.webp';
 
 /** Flat, recognisable PDF file glyph (rendered in the brand red tint). */
 function PdfIcon() {
@@ -84,6 +85,8 @@ export default function DocumentsPage() {
             <div className="doc-hero__media">
               <img
                 src={heroImage}
+                srcSet={`${heroImageSmall} 800w, ${heroImage} 1200w`}
+                sizes="(min-width: 900px) 480px, (min-width: 640px) 420px, 92vw"
                 alt="رسم توضيحي يمثل الوثائق الإدارية لجمعية شمس"
                 width={1200}
                 height={1200}

@@ -2,14 +2,36 @@ import { useEffect, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import FinalCTA from '@/components/finalCTA';
 import heroImage1 from '@/assets/home-page-images/hero-01.webp';
+import heroImage1Small from '@/assets/home-page-images/hero-01-480.webp';
 import heroImage2 from '@/assets/home-page-images/hero-02.webp';
+import heroImage2Small from '@/assets/home-page-images/hero-02-480.webp';
 import heroImage3 from '@/assets/home-page-images/hero-03.webp';
+import heroImage3Small from '@/assets/home-page-images/hero-03-480.webp';
 
-/** Team photos shown in the Hero, in their initial right / center / left slots. */
+/**
+ * Team photos shown in the Hero, in their initial right / center / left slots.
+ *
+ * Each photo ships two widths so the browser never downloads the full 960px
+ * variant for the ~400px desktop slot or a 1x display.
+ */
+const HERO_IMAGE_SIZES = '(min-width: 640px) 420px, 92vw';
+
 const HERO_IMAGES = [
-  { src: heroImage1, alt: 'صورة جماعية لأعضاء فريق جمعية شمس' },
-  { src: heroImage2, alt: 'متطوعو جمعية شمس خلال نشاط ميداني' },
-  { src: heroImage3, alt: 'فريق جمعية شمس خلال لقاء مجتمعي' },
+  {
+    src: heroImage1,
+    srcSet: `${heroImage1Small} 480w, ${heroImage1} 960w`,
+    alt: 'صورة جماعية لأعضاء فريق جمعية شمس',
+  },
+  {
+    src: heroImage2,
+    srcSet: `${heroImage2Small} 480w, ${heroImage2} 960w`,
+    alt: 'متطوعو جمعية شمس خلال نشاط ميداني',
+  },
+  {
+    src: heroImage3,
+    srcSet: `${heroImage3Small} 480w, ${heroImage3} 960w`,
+    alt: 'فريق جمعية شمس خلال لقاء مجتمعي',
+  },
 ] as const;
 
 function FileTextIcon() {
@@ -328,8 +350,12 @@ export default function HomePage() {
                   >
                     <img
                       src={image.src}
+                      srcSet={image.srcSet}
+                      sizes={HERO_IMAGE_SIZES}
                       alt={image.alt}
-                      loading={index === 0 ? 'eager' : 'lazy'}
+                      width={960}
+                      height={540}
+                      loading="eager"
                       fetchPriority={index === 0 ? 'high' : 'auto'}
                       decoding="async"
                       draggable={false}
@@ -352,11 +378,16 @@ export default function HomePage() {
                   dir="ltr"
                   style={{ transform: `translateX(${-mobileIndex * 100}%)` }}
                 >
-                  {HERO_IMAGES.map((image) => (
+                  {HERO_IMAGES.map((image, index) => (
                     <div key={image.src} className="home-hero__carousel-slide">
                       <img
                         src={image.src}
+                        srcSet={image.srcSet}
+                        sizes={HERO_IMAGE_SIZES}
                         alt={image.alt}
+                        width={960}
+                        height={540}
+                        fetchPriority={index === mobileIndex ? 'high' : 'auto'}
                         decoding="async"
                         draggable={false}
                       />
