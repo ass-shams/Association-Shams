@@ -7,13 +7,13 @@
  * `position` maps to CSS `object-position` and is used only to keep important
  * subjects (people, banners) inside the frame when a section crops the image.
  */
-import image01 from '@/assets/aboutimage/image01.jpg';
-import image02 from '@/assets/aboutimage/image02.jpg';
-import image03 from '@/assets/aboutimage/image03.jpg';
-import image04 from '@/assets/aboutimage/image04.jpg';
-import image05 from '@/assets/aboutimage/image05.jpg';
-import image06 from '@/assets/aboutimage/image06.jpg';
-import image07 from '@/assets/aboutimage/image07.jpg';
+import image01 from '@/assets/aboutimage/image01.webp';
+import image02 from '@/assets/aboutimage/image02.webp';
+import image03 from '@/assets/aboutimage/image03.webp';
+import image04 from '@/assets/aboutimage/image04.webp';
+import image05 from '@/assets/aboutimage/image05.webp';
+import image06 from '@/assets/aboutimage/image06.webp';
+import image07 from '@/assets/aboutimage/image07.webp';
 import image08 from '@/assets/aboutimage/image08.jpg';
 
 export interface AboutImage {

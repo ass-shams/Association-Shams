@@ -1,4 +1,5 @@
-import { Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import AuthProvider from './auth/AuthProvider';
 import RequireAuth from './auth/RequireAuth';
 import DashboardLayout from './components/DashboardLayout';
@@ -9,6 +10,19 @@ import DashboardNotFound from './pages/DashboardNotFound';
 import MembersPage from './pages/MembersPage';
 import ParticipantsPage from './pages/ParticipantsPage';
 import ProductsPage from './pages/ProductsPage';
+import { getDashboardPageTitle } from './navigation';
+import { formatDocumentTitle } from '@/lib/documentTitle';
+
+/** Keeps the browser tab title in sync with the current dashboard route. */
+function DashboardDocumentTitle() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    document.title = formatDocumentTitle(getDashboardPageTitle(pathname));
+  }, [pathname]);
+
+  return null;
+}
 
 /**
  * Root of the admin dashboard surface.
@@ -22,6 +36,7 @@ export default function DashboardApp() {
   return (
     <AuthProvider>
       <RequireAuth>
+        <DashboardDocumentTitle />
         <Routes>
           <Route element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />

@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# The admin dashboard is served from dashboard.associationshams.com and is
+# additionally protected by the `X-Robots-Tag: noindex, nofollow` response
+# header (see vercel.json). This path exists only during local development.
+Disallow: /dashboard
+
+# API endpoints return JSON, not pages; keep them out of the crawl queue.
+Disallow: /api/
+
+Sitemap: https://associationshams.com/sitemap.xml

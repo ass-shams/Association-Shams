@@ -6,6 +6,10 @@ import ProductMeta from '@/components/store/ProductMeta';
 import ProductTabs from '@/components/store/ProductTabs';
 import RelatedProducts from '@/components/store/RelatedProducts';
 import { getRelatedProducts, useProducts } from '@/data/productService';
+import { usePageSeo } from '@/lib/seo';
+
+const STORE_DESCRIPTION =
+  'متجر جمعية شمس للكفيف والمبصر: اكتشف منتجات الجمعية، واقتناؤها يساهم في دعم أنشطتها ومشاريعها الخدمية.';
 
 /**
  * Dynamic Product Details page. Reads the product from the slug in the URL from
@@ -19,6 +23,20 @@ export default function ProductDetailsPage() {
   const { products, loading, error } = useProducts();
 
   const product = slug ? products.find((item) => item.slug === slug) : undefined;
+  const productPath = `/store/${slug ?? ''}`;
+
+  usePageSeo({
+    pageTitle: product ? product.name : 'المتجر',
+    description: product?.shortDescription ?? product?.description ?? STORE_DESCRIPTION,
+    path: productPath,
+    breadcrumbs: product
+      ? [
+          { name: 'الرئيسية', path: '/' },
+          { name: 'المتجر', path: '/store' },
+          { name: product.name, path: productPath },
+        ]
+      : undefined,
+  });
 
   if (loading) {
     return (

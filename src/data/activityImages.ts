@@ -8,7 +8,7 @@
  * `position` maps to CSS `object-position` and is used to keep the important
  * subject inside the frame when the Hero crops the image.
  */
-import heroImage from '@/assets/activities-images/hero-image.png';
+import heroImage from '@/assets/activities-images/hero-image.webp';
 
 export interface ActivityImage {
   /** Local image import. */

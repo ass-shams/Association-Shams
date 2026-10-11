@@ -1,4 +1,4 @@
-import heroImage from '@/assets/competitions-images/hero-image.png';
+import heroImage from '@/assets/competitions-images/hero-image.webp';
 
 /** Hero for the dedicated competitions page — eyebrow, headline, description, actions and image. */
 export default function CompetitionsHero() {
@@ -29,6 +29,8 @@ export default function CompetitionsHero() {
             <img
               src={heroImage}
               alt="صورة توضيحية لمسابقات جمعية شمس"
+              width={1200}
+              height={1200}
               loading="eager"
               fetchPriority="high"
               decoding="async"

@@ -7,8 +7,6 @@ const BRAND_NAME = 'جمعية شمس للكفيف والمبصر';
 const BRAND_DESCRIPTION =
   'منظمة مغربية رائدة تأسست بمدينة بني ملال، وتشكّل جسراً تضامنياً يهدف إلى تحقيق الإدماج الشامل للمكفوفين وضعاف البصر داخل المجتمع جنباً إلى جنب مع المبصرين.';
 
-const COPY_YEAR = 2026;
-
 function MailIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
@@ -53,15 +51,6 @@ function InstagramIcon() {
   );
 }
 
-function ArrowUpIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <path d="M12 19V5" />
-      <path d="m5 12 7-7 7 7" />
-    </svg>
-  );
-}
-
 interface FooterLink {
   to: string;
   label: string;
@@ -83,7 +72,6 @@ interface ContactLink {
 
 interface ContactItem {
   id: string;
-  label: string;
   icon: () => ReactElement;
   links: readonly ContactLink[];
 }
@@ -92,13 +80,11 @@ interface ContactItem {
 const CONTACT_ITEMS: readonly ContactItem[] = [
   {
     id: 'email',
-    label: 'البريد الإلكتروني',
     icon: MailIcon,
     links: [{ text: 'ass.shamsam@gmail.com', href: 'mailto:ass.shamsam@gmail.com' }],
   },
   {
     id: 'phone',
-    label: 'أرقام الهاتف',
     icon: PhoneIcon,
     links: [
       { text: '0640635750', href: 'tel:+212640635750' },
@@ -107,9 +93,8 @@ const CONTACT_ITEMS: readonly ContactItem[] = [
   },
   {
     id: 'address',
-    label: 'العنوان',
     icon: LocationIcon,
-    links: [{ text: 'الجيش الملكي , Beni Mellal, Morocco, 23000' }],
+    links: [{ text: 'الجيش الملكي , بني ملال, المغرب, 23000' }],
   },
 ];
 
@@ -118,13 +103,6 @@ const SOCIAL_LINKS = [
   { id: 'facebook', label: 'فيسبوك', href: 'https://www.facebook.com/Association.chams', icon: FacebookIcon },
   { id: 'instagram', label: 'إنستغرام', href: 'https://www.instagram.com/ass.shams', icon: InstagramIcon },
 ] as const;
-
-/** Smooth scroll that honours the reduced-motion preference. */
-function scrollToTop() {
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
-}
 
 /**
  * The single shared Footer for every public page. It is rendered once by the
@@ -193,7 +171,6 @@ export default function Footer() {
                     <item.icon />
                   </span>
                   <span className="footer-contact__body">
-                    <span className="footer-contact__label">{item.label}</span>
                     <span className="footer-contact__values">
                       {item.links.map((link, index) => (
                         <Fragment key={link.text}>
@@ -222,19 +199,17 @@ export default function Footer() {
 
       <div className="footer-bottom">
         <div className="footer-bottom__inner">
-          <p className="footer-copyright">© {COPY_YEAR} جمعية شمس. جميع الحقوق محفوظة.</p>
-
-          <div className="footer-bottom__actions">
-            <button
-              type="button"
-              className="footer-top"
-              onClick={scrollToTop}
-              aria-label="العودة إلى أعلى الصفحة"
+          <p className="footer-copyright">
+            تم تصميم الموقع من طرف{' '}
+            <a
+              href="https://nagriva.ma"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-copyright__link"
             >
-              <ArrowUpIcon />
-              <span>العودة إلى الأعلى</span>
-            </button>
-          </div>
+              رضوان ايت الحادج
+            </a>
+          </p>
         </div>
       </div>
     </footer>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import logo from '@/assets/navbar-footer.png';
+import { useDocumentTitle } from '@/lib/documentTitle';
 import { useAuth } from './useAuth';
 
 const REQUIRED_MESSAGE = 'المرجو إدخال البريد الإلكتروني وكلمة المرور.';
@@ -17,6 +18,7 @@ const UNCONFIGURED_MESSAGE =
  * be used here.
  */
 export default function LoginPage() {
+  useDocumentTitle('تسجيل الدخول');
   const { status, error, isSigningIn, isConfigured, signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Breadcrumb from '@/components/Breadcrumb';
 import FinalCTA from '@/components/finalCTA';
 import { documents } from '@/data/documents';
-import heroImage from '@/assets/documents-images/hero-img.png';
+import heroImage from '@/assets/documents-images/hero-img.webp';
 
 /** Flat, recognisable PDF file glyph (rendered in the brand red tint). */
 function PdfIcon() {
@@ -85,6 +85,8 @@ export default function DocumentsPage() {
               <img
                 src={heroImage}
                 alt="رسم توضيحي يمثل الوثائق الإدارية لجمعية شمس"
+                width={1200}
+                height={1200}
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"

@@ -73,6 +73,10 @@ export default function Navbar() {
         </nav>
 
         <div className="site-actions">
+          <NavLink className="btn btn--primary btn--md btn--join site-cta" to="/membership">
+            انخرط معنا
+          </NavLink>
+
           <button
             type="button"
             className="menu-button"

@@ -488,6 +488,12 @@ button:disabled,
   border-start-start-radius: 2px;
 }
 
+/* Desktop-only membership CTA. Hidden on tablet/mobile, which rely on the
+   drawer; it reuses the shared `.btn--join` effect from the hero. */
+.site-actions .site-cta {
+  display: none;
+}
+
 /* --- 4.2 Mobile drawer --- */
 
 .drawer-scrim {
@@ -621,9 +627,24 @@ button:disabled,
 }
 
 @media (width >= 1280px) {
+  /*
+   * Three-column grid so the navigation is centered on the viewport while the
+   * brand stays at the start (right in RTL) and the CTA at the end. Equal 1fr
+   * side columns keep the links centered independently of the brand/CTA widths.
+   */
+  .site-header__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .site-brand {
+    justify-self: start;
+  }
+
   .site-nav {
     display: block;
-    margin-inline-start: auto;
+    justify-self: center;
+    margin-inline-start: 0;
     min-inline-size: 0;
   }
 
@@ -640,7 +661,13 @@ button:disabled,
   }
 
   .site-actions {
-    display: none;
+    justify-self: end;
+    margin-inline-start: 0;
+  }
+
+  .site-actions .site-cta {
+    display: inline-flex;
+    padding-inline: var(--sp-5);
   }
 }
 
@@ -936,6 +963,18 @@ a.footer-contact__value:hover {
   font-size: var(--fs-small);
   line-height: var(--lh-compact);
   color: var(--c-text-soft);
+}
+
+.footer-copyright__link {
+  color: var(--c-blue-strong);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+
+.footer-copyright__link:hover {
+  color: var(--c-blue-hover);
+  text-decoration: underline;
 }
 
 .footer-bottom__actions {

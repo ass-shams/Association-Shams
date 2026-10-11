@@ -1,4 +1,4 @@
-import goldenVoiceImage from '@/assets/competitions-images/golden-voice-image.png';
+import goldenVoiceImage from '@/assets/competitions-images/golden-voice-image.webp';
 import type { Competition } from '@/types';
 
 /**
