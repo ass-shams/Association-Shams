@@ -12,14 +12,34 @@ export type TurnstileResult = 'ok' | 'failed' | 'unavailable';
 
 const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
-/** First client IP from `x-forwarded-for`, or null when it is absent. */
+/**
+ * Client IP derived from trusted deployment headers.
+ *
+ * Trust assumptions: the endpoints run on Vercel, whose edge network sets
+ * `x-vercel-forwarded-for`, `x-real-ip` and `x-forwarded-for` to the client IP
+ * and overwrites any client-supplied value (except when an Enterprise "trusted
+ * proxy" is explicitly configured). We therefore prefer the platform-controlled
+ * `x-vercel-forwarded-for`, then `x-real-ip`, then `x-forwarded-for`, and take
+ * the first entry of any comma-separated chain. Arbitrary/unlisted headers are
+ * never trusted. When none is present (for example the local dev server) this
+ * returns null and callers fall back to a shared bucket.
+ */
+const TRUSTED_IP_HEADERS = ['x-vercel-forwarded-for', 'x-real-ip', 'x-forwarded-for'] as const;
+
+/** First client IP from the trusted deployment headers, or null when absent. */
 export function firstForwardedIp(req: ApiRequest): string | null {
-  const header = req.headers['x-forwarded-for'];
-  const value = Array.isArray(header) ? header[0] : header;
-  if (typeof value !== 'string' || !value) {
-    return null;
+  for (const name of TRUSTED_IP_HEADERS) {
+    const header = req.headers[name];
+    const value = Array.isArray(header) ? header[0] : header;
+    if (typeof value !== 'string' || !value) {
+      continue;
+    }
+    const first = value.split(',')[0]?.trim();
+    if (first) {
+      return first;
+    }
   }
-  return value.split(',')[0]?.trim() || null;
+  return null;
 }
 
 /**

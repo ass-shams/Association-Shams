@@ -2,6 +2,8 @@ import type { ServerResponse } from 'node:http';
 import { methodNotAllowed, readJsonBody, sendJson } from './_lib/http.js';
 import type { ApiRequest } from './_lib/http.js';
 import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
+import { consumeRateLimit, hashIdentifier } from './_lib/rateLimit.js';
+import { firstForwardedIp, verifyTurnstile } from './_lib/turnstile.js';
 import { validateMembershipForm } from '../src/pages/public/membership/validation.js';
 import { INTEREST_OPTIONS } from '../src/pages/public/membership/constants.js';
 import type {
@@ -21,9 +23,16 @@ const MAX_PHONE_LENGTH = 32;
 const MAX_CITY_LENGTH = 120;
 const MAX_EXPECTATIONS_LENGTH = 5000;
 
+/** Persistent per-IP ceiling for membership submissions (fixed one-hour window). */
+const MEMBERSHIP_RATE_LIMIT = 5;
+const MEMBERSHIP_RATE_WINDOW_SECONDS = 60 * 60;
+
 const GENDERS: readonly Gender[] = ['male', 'female'];
 
 const INVALID_MESSAGE = 'المرجو التحقق من صحة البيانات المدخلة.';
+const CAPTCHA_FAILED_MESSAGE = 'تعذّر إكمال التحقق. المرجو المحاولة مرة أخرى.';
+const TOO_MANY_MESSAGE = 'عدد كبير من المحاولات. المرجو المحاولة لاحقاً.';
+const SERVICE_UNAVAILABLE_MESSAGE = 'خدمة الانخراط غير متاحة مؤقتاً. المرجو المحاولة لاحقاً.';
 const SUBMIT_FAILED_MESSAGE = 'تعذّر إرسال طلب الانخراط. المرجو المحاولة مرة أخرى.';
 
 function asString(value: unknown): string {
@@ -62,12 +71,17 @@ function parseInterests(value: unknown): InterestValue[] | null {
 /**
  * Public submission endpoint for the /membership electronic form.
  *
- * Re-validates every value server-side (the browser check is never trusted) and
- * inserts the application with the service role.
+ * Re-validates every value server-side (the browser check is never trusted),
+ * verifies the Cloudflare Turnstile token server-side, enforces a persistent
+ * per-IP rate limit, then inserts the application with the service role. The
+ * security checks fail closed when Turnstile or the rate-limit infrastructure
+ * is unavailable.
  *
  *   201 — stored
- *   400 — invalid payload
+ *   400 — invalid payload or failed Turnstile
  *   405 — non-POST
+ *   429 — rate limit exceeded
+ *   503 — verification/rate-limit infrastructure unavailable
  *   500 — database insert failed (or server credentials unavailable)
  */
 export default async function handler(req: ApiRequest, res: ServerResponse) {
@@ -104,6 +118,34 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
   const fieldErrors = validateMembershipForm(values);
   if (interests === null || Object.keys(fieldErrors).length > 0) {
     return sendJson(res, 400, { message: INVALID_MESSAGE });
+  }
+
+  // Server-side Turnstile verification: a client-side success is never trusted.
+  const turnstileToken = typeof body.turnstileToken === 'string' ? body.turnstileToken.trim() : '';
+  if (!turnstileToken) {
+    return sendJson(res, 400, { message: CAPTCHA_FAILED_MESSAGE });
+  }
+
+  const remoteIp = firstForwardedIp(req);
+  const verification = await verifyTurnstile(turnstileToken, remoteIp);
+  if (verification === 'unavailable') {
+    return sendJson(res, 503, { message: SERVICE_UNAVAILABLE_MESSAGE });
+  }
+  if (verification !== 'ok') {
+    return sendJson(res, 400, { message: CAPTCHA_FAILED_MESSAGE });
+  }
+
+  // Persistent, cross-instance rate limit keyed by the hashed client IP.
+  const rate = await consumeRateLimit(
+    `membership:${hashIdentifier(remoteIp ?? 'unknown')}`,
+    MEMBERSHIP_RATE_LIMIT,
+    MEMBERSHIP_RATE_WINDOW_SECONDS,
+  );
+  if (rate === 'unavailable') {
+    return sendJson(res, 503, { message: SERVICE_UNAVAILABLE_MESSAGE });
+  }
+  if (rate === 'limited') {
+    return sendJson(res, 429, { message: TOO_MANY_MESSAGE });
   }
 
   const expectations = values.expectations.trim();

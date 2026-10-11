@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import TurnstileWidget from '@/components/contact/TurnstileWidget';
+import type { TurnstileWidgetHandle } from '@/components/contact/TurnstileWidget';
 import { GENERIC_MEMBERSHIP_ERROR, submitMembershipApplication } from '@/data/membershipService';
 import BackToLanding from './components/BackToLanding';
 import GenderField from './components/GenderField';
@@ -97,6 +99,9 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileError, setTurnstileError] = useState('');
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   /** Keys whose controls are plain text/number inputs. */
   type TextField = 'fullName' | 'phone' | 'city' | 'age' | 'expectations';
@@ -120,6 +125,25 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
     setErrors((current) => (current.interests ? { ...current, interests: undefined } : current));
   }
 
+  function resetTurnstile() {
+    setTurnstileToken('');
+    turnstileRef.current?.reset();
+  }
+
+  function handleTurnstileVerify(token: string) {
+    setTurnstileToken(token);
+    setTurnstileError('');
+  }
+
+  function handleTurnstileExpire() {
+    setTurnstileToken('');
+  }
+
+  function handleTurnstileError() {
+    setTurnstileToken('');
+    setTurnstileError('تعذّر إكمال التحقق. المرجو المحاولة مرة أخرى.');
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -139,15 +163,25 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
     }
 
     setSubmitError(null);
+    setTurnstileError('');
+
+    if (!turnstileToken) {
+      setTurnstileError('المرجو إكمال التحقق قبل إرسال الاستمارة.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      await submitMembershipApplication(values);
+      await submitMembershipApplication(values, turnstileToken);
       setSubmitted(true);
+      resetTurnstile();
     } catch (error) {
       setSubmitError(
         error instanceof Error && error.message ? error.message : GENERIC_MEMBERSHIP_ERROR,
       );
+      // The Turnstile token is single-use; obtain a fresh one for the retry.
+      resetTurnstile();
     } finally {
       setSubmitting(false);
     }
@@ -157,6 +191,7 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
     setValues(EMPTY_VALUES);
     setErrors({});
     setSubmitError(null);
+    resetTurnstile();
   }
 
   if (submitted) {
@@ -310,6 +345,18 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
                 />
               </div>
             </fieldset>
+
+            <div className="turnstile-row">
+              <TurnstileWidget
+                ref={turnstileRef}
+                onVerify={handleTurnstileVerify}
+                onExpire={handleTurnstileExpire}
+                onError={handleTurnstileError}
+              />
+              {turnstileError ? (
+                <p className="field__message field__error">{turnstileError}</p>
+              ) : null}
+            </div>
 
             {submitError ? (
               <p className="form-alert" role="alert">

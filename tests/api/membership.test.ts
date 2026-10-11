@@ -4,6 +4,8 @@ import type { ServerResponse } from 'node:http';
 const state = vi.hoisted(() => ({
   insertError: null as { code?: string } | null,
   inserted: null as Record<string, unknown> | null,
+  turnstile: 'ok' as 'ok' | 'failed' | 'unavailable',
+  rate: 'allowed' as 'allowed' | 'limited' | 'unavailable',
 }));
 
 vi.mock('../../api/_lib/supabaseAdmin.js', () => ({
@@ -17,6 +19,16 @@ vi.mock('../../api/_lib/supabaseAdmin.js', () => ({
   }),
 }));
 
+vi.mock('../../api/_lib/turnstile.js', () => ({
+  verifyTurnstile: async () => state.turnstile,
+  firstForwardedIp: () => '203.0.113.7',
+}));
+
+vi.mock('../../api/_lib/rateLimit.js', () => ({
+  consumeRateLimit: async () => state.rate,
+  hashIdentifier: (value: string) => `hash:${value}`,
+}));
+
 import handler from '../../api/membership.js';
 
 const BASE = {
@@ -27,6 +39,7 @@ const BASE = {
   gender: 'female',
   interests: ['ثقافية', 'فنية'],
   expectations: 'المشاركة في الأنشطة الثقافية للجمعية.',
+  turnstileToken: 'turnstile-token',
 };
 
 function createResponse() {
@@ -59,6 +72,8 @@ async function call(body: unknown, method = 'POST') {
 beforeEach(() => {
   state.insertError = null;
   state.inserted = null;
+  state.turnstile = 'ok';
+  state.rate = 'allowed';
 });
 
 describe('POST /api/membership', () => {
@@ -176,5 +191,53 @@ describe('POST /api/membership', () => {
   it('rejects non-POST methods', async () => {
     const result = await call({}, 'GET');
     expect(result.status).toBe(405);
+  });
+});
+
+describe('anti-abuse protections', () => {
+  it('rejects a missing Turnstile token', async () => {
+    const { turnstileToken: _token, ...rest } = BASE;
+    const result = await call(rest);
+
+    expect(result.status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('rejects a failed Turnstile verification', async () => {
+    state.turnstile = 'failed';
+    const result = await call(BASE);
+
+    expect(result.status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('fails closed when Turnstile verification is unavailable', async () => {
+    state.turnstile = 'unavailable';
+    const result = await call(BASE);
+
+    expect(result.status).toBe(503);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('rejects repeated requests over the rate limit', async () => {
+    state.rate = 'limited';
+    const result = await call(BASE);
+
+    expect(result.status).toBe(429);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('fails closed when the rate limit cannot be checked', async () => {
+    state.rate = 'unavailable';
+    const result = await call(BASE);
+
+    expect(result.status).toBe(503);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('does not insert when Turnstile fails even with valid fields', async () => {
+    state.turnstile = 'failed';
+    await call({ ...BASE, expectations: '  ' });
+    expect(state.inserted).toBeNull();
   });
 });

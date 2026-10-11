@@ -32,15 +32,17 @@ async function readErrorMessage(response: Response, fallback: string): Promise<s
 
 /**
  * Submit the electronic membership form. Resolves only after the server
- * confirms the database insert; rejects with a safe message otherwise.
+ * confirms the database insert; rejects with a safe message otherwise. The
+ * Turnstile token is verified server-side by the endpoint.
  */
 export async function submitMembershipApplication(
   values: MembershipFormValues,
+  turnstileToken: string,
 ): Promise<void> {
   const response = await fetch(MEMBERSHIP_ENDPOINT, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(values),
+    body: JSON.stringify({ ...values, turnstileToken }),
   });
 
   if (!response.ok) {
