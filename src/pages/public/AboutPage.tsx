@@ -377,32 +377,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* 9. Video / real story (reuses the approved association video) */}
-      <section className="section section--default about-video" aria-labelledby="about-video-title">
-        <div className="container">
-          <header className="about-section-head about-section-head--center">
-            <p className="about-eyebrow">شاهد</p>
-            <h2 id="about-video-title" className="about-h2">
-              تعرّف على جمعية شمس
-            </h2>
-            <p className="about-section-head__lead">
-              لمحة عن أنشطة الجمعية وبرامجها، وكيف تساهم في تعزيز الإدماج والتمكين.
-            </p>
-          </header>
-
-          <div className="video-embed about-video__embed">
-            <iframe
-              src="https://www.youtube.com/embed/Q4_kmdvNwLg"
-              title="فيديو عن جمعية شمس للكفيف والمبصر"
-              loading="lazy"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
-          </div>
-        </div>
-      </section>
-
       {/* 10. Shared final CTA */}
       <FinalCTA
         title="انضم إلينا"

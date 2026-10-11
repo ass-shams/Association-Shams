@@ -2816,18 +2816,6 @@ a.footer-contact__value:hover {
   border-block-end: 1px solid var(--c-border);
 }
 
-.about-hero::after {
-  content: '';
-  position: absolute;
-  inset-block-start: -96px;
-  inset-inline-end: -72px;
-  inline-size: clamp(180px, 24vw, 320px);
-  block-size: clamp(180px, 24vw, 320px);
-  border-radius: var(--r-full);
-  background-color: var(--c-yellow-soft);
-  opacity: 0.6;
-  pointer-events: none;
-}
 
 .about-hero__inner {
   position: relative;
@@ -4217,18 +4205,6 @@ a.footer-contact__value:hover {
   border-block-end: 1px solid var(--c-border);
 }
 
-.store-hero::after {
-  content: '';
-  position: absolute;
-  inset-block-start: -96px;
-  inset-inline-end: -72px;
-  inline-size: clamp(180px, 22vw, 300px);
-  block-size: clamp(180px, 22vw, 300px);
-  border-radius: var(--r-full);
-  background-color: var(--c-yellow-soft);
-  opacity: 0.6;
-  pointer-events: none;
-}
 
 .store-hero__inner {
   position: relative;
