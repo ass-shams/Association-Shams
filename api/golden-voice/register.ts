@@ -2,6 +2,7 @@ import type { ServerResponse } from 'node:http';
 import { methodNotAllowed, sendJson } from '../_lib/http.js';
 import type { ApiRequest } from '../_lib/http.js';
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
+import { resolveGoldenVoiceRegistrationGate } from '../_lib/competitions.js';
 import {
   GOLDEN_VOICE_TABLE,
   isValidVideoPath,
@@ -26,6 +27,8 @@ export const config = { maxDuration: 60 };
 const INVALID_PAYLOAD_MESSAGE = 'المرجو التحقق من صحة البيانات المدخلة.';
 const REGION_MISMATCH_MESSAGE = 'لا يمكن إرفاق فيديو لمشاركين من جهة بني ملال خنيفرة.';
 const INSERT_FAILED_MESSAGE = 'تعذّر إكمال التسجيل. المرجو المحاولة مرة أخرى.';
+const REGISTRATION_CLOSED_MESSAGE = 'التسجيل في هذه المسابقة غير مفتوح حالياً.';
+const SERVICE_UNAVAILABLE_MESSAGE = 'خدمة التسجيل غير متاحة مؤقتاً. المرجو المحاولة لاحقاً.';
 
 /** Guard against oversized text payloads (Vercel also caps the request body). */
 const MAX_NAME_LENGTH = 120;
@@ -48,6 +51,16 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
   const body = readJsonBody(req.body);
   if (!body) {
     return sendJson(res, 400, { message: INVALID_PAYLOAD_MESSAGE });
+  }
+
+  // Verify the competition is accepting registrations before doing any work.
+  const gate = await resolveGoldenVoiceRegistrationGate();
+  if (!gate.ok) {
+    if (gate.reason === 'not-open') {
+      return sendJson(res, 403, { message: REGISTRATION_CLOSED_MESSAGE });
+    }
+    // Missing competition row or database failure: fail closed.
+    return sendJson(res, 503, { message: SERVICE_UNAVAILABLE_MESSAGE });
   }
 
   const values: RegistrationValues = {
@@ -80,10 +93,10 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
   const videoPath = typeof body.videoPath === 'string' ? body.videoPath.trim() : '';
 
   if (isVideoRequired(region)) {
-    return registerWithVideo(res, values, region, videoPath);
+    return registerWithVideo(res, values, region, videoPath, gate.competitionId);
   }
 
-  return registerWithoutVideo(res, values, region, videoPath);
+  return registerWithoutVideo(res, values, region, videoPath, gate.competitionId);
 }
 
 async function registerWithVideo(
@@ -91,6 +104,7 @@ async function registerWithVideo(
   values: RegistrationValues,
   region: RegionValue,
   videoPath: string,
+  competitionId: string,
 ) {
   if (!videoPath) {
     return sendJson(res, 400, { message: VIDEO_REQUIRED_MESSAGE });
@@ -114,6 +128,7 @@ async function registerWithVideo(
       city: values.city.trim(),
       region,
       video_path: videoPath,
+      competition_id: competitionId,
     });
 
     if (error) {
@@ -138,6 +153,7 @@ async function registerWithoutVideo(
   values: RegistrationValues,
   region: RegionValue,
   videoPath: string,
+  competitionId: string,
 ) {
   if (videoPath) {
     return sendJson(res, 400, { message: REGION_MISMATCH_MESSAGE });
@@ -151,6 +167,7 @@ async function registerWithoutVideo(
       city: values.city.trim(),
       region,
       video_path: null,
+      competition_id: competitionId,
     });
 
     if (error) {

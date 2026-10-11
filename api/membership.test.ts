@@ -1,0 +1,180 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ServerResponse } from 'node:http';
+
+const state = vi.hoisted(() => ({
+  insertError: null as { code?: string } | null,
+  inserted: null as Record<string, unknown> | null,
+}));
+
+vi.mock('./_lib/supabaseAdmin.js', () => ({
+  getSupabaseAdmin: () => ({
+    from: () => ({
+      insert: async (row: Record<string, unknown>) => {
+        state.inserted = row;
+        return { error: state.insertError };
+      },
+    }),
+  }),
+}));
+
+import handler from './membership.js';
+
+const BASE = {
+  fullName: 'سعاد العلمي',
+  phone: '0612345678',
+  city: 'بني ملال',
+  age: '22',
+  gender: 'female',
+  interests: ['ثقافية', 'فنية'],
+  expectations: 'المشاركة في الأنشطة الثقافية للجمعية.',
+};
+
+function createResponse() {
+  let body = '';
+  const res = {
+    statusCode: 0,
+    setHeader(_name: string, _value: unknown) {},
+    end(chunk?: string) {
+      body = typeof chunk === 'string' ? chunk : '';
+    },
+  };
+
+  return {
+    res: res as unknown as ServerResponse,
+    get status() {
+      return res.statusCode;
+    },
+    get json() {
+      return body ? (JSON.parse(body) as Record<string, unknown>) : null;
+    },
+  };
+}
+
+async function call(body: unknown, method = 'POST') {
+  const fake = createResponse();
+  await handler({ method, body, headers: {} } as never, fake.res);
+  return fake;
+}
+
+beforeEach(() => {
+  state.insertError = null;
+  state.inserted = null;
+});
+
+describe('POST /api/membership', () => {
+  it('stores a valid application and returns 201', async () => {
+    const result = await call(BASE);
+
+    expect(result.status).toBe(201);
+    expect(state.inserted).toMatchObject({
+      full_name: 'سعاد العلمي',
+      phone: '0612345678',
+      city: 'بني ملال',
+      age: 22,
+      gender: 'female',
+      interests: ['ثقافية', 'فنية'],
+      expectations: 'المشاركة في الأنشطة الثقافية للجمعية.',
+    });
+  });
+
+  it('accepts a numeric age and trims values', async () => {
+    const result = await call({
+      ...BASE,
+      fullName: '  الاسم الكامل  ',
+      city: '  الدار البيضاء ',
+      age: 30,
+      expectations: '  ',
+    });
+
+    expect(result.status).toBe(201);
+    expect(state.inserted).toMatchObject({
+      full_name: 'الاسم الكامل',
+      city: 'الدار البيضاء',
+      age: 30,
+      expectations: null,
+    });
+  });
+
+  it('de-duplicates interests while preserving order', async () => {
+    const result = await call({ ...BASE, interests: ['فنية', 'ثقافية', 'فنية'] });
+
+    expect(result.status).toBe(201);
+    expect(state.inserted).toMatchObject({ interests: ['فنية', 'ثقافية'] });
+  });
+
+  it('rejects a missing full name', async () => {
+    const { fullName: _fullName, ...rest } = BASE;
+    const result = await call(rest);
+    expect(result.status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('rejects a too-short full name', async () => {
+    const result = await call({ ...BASE, fullName: 'أب' });
+    expect(result.status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('rejects an invalid phone number', async () => {
+    const result = await call({ ...BASE, phone: '123' });
+    expect(result.status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('rejects a missing city', async () => {
+    const { city: _city, ...rest } = BASE;
+    const result = await call(rest);
+    expect(result.status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('rejects a missing or invalid age', async () => {
+    const { age: _age, ...rest } = BASE;
+    expect((await call(rest)).status).toBe(400);
+    expect((await call({ ...BASE, age: '0' })).status).toBe(400);
+    expect((await call({ ...BASE, age: '5.5' })).status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('rejects a missing gender', async () => {
+    const { gender: _gender, ...rest } = BASE;
+    const result = await call(rest);
+    expect(result.status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('rejects an unsupported gender', async () => {
+    const result = await call({ ...BASE, gender: 'other' });
+    expect(result.status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('rejects an empty interests selection', async () => {
+    const result = await call({ ...BASE, interests: [] });
+    expect(result.status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('rejects an interest outside the approved options', async () => {
+    const result = await call({ ...BASE, interests: ['ثقافية', 'سياسية'] });
+    expect(result.status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('rejects an oversized expectations value', async () => {
+    const result = await call({ ...BASE, expectations: 'x'.repeat(5001) });
+    expect(result.status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('returns 500 when the insert fails', async () => {
+    state.insertError = { code: '23514' };
+    const result = await call(BASE);
+    expect(result.status).toBe(500);
+  });
+
+  it('rejects non-POST methods', async () => {
+    const result = await call({}, 'GET');
+    expect(result.status).toBe(405);
+  });
+});

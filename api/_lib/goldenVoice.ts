@@ -179,17 +179,22 @@ export async function removeObject(path: string): Promise<void> {
 }
 
 /**
- * Create a short-lived signed URL for a private video object. Only used by the
- * protected staff endpoint; it is never part of the public registration flow,
- * so viewer links are not permanent and not stored anywhere.
+ * Create a short-lived signed URL for a private video object. Only used by
+ * protected admin/staff endpoints; it is never part of the public registration
+ * flow, so viewer links are not permanent and not stored anywhere.
+ *
+ * When `download` is provided, Storage returns the object with an attachment
+ * `Content-Disposition` (using the given filename, or the object's own name for
+ * `true`), which makes the admin download action retrieve the real file.
  */
 export async function createVideoViewUrl(
   path: string,
   expiresInSeconds = 300,
+  download?: string | boolean,
 ): Promise<string | null> {
   const { data, error } = await getSupabaseAdmin()
     .storage.from(GOLDEN_VOICE_BUCKET)
-    .createSignedUrl(path, expiresInSeconds);
+    .createSignedUrl(path, expiresInSeconds, download === undefined ? undefined : { download });
 
   if (error || !data?.signedUrl) {
     return null;

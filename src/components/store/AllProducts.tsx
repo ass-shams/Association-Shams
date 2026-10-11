@@ -1,9 +1,9 @@
 import ProductGrid from '@/components/store/ProductGrid';
-import { getAllProducts } from '@/data/productService';
+import { useProducts } from '@/data/productService';
 
-/** Full catalogue grid. */
+/** Full catalogue grid, driven by the dashboard-managed products. */
 export default function AllProducts() {
-  const products = getAllProducts();
+  const { products, loading, error } = useProducts();
 
   return (
     <section
@@ -24,7 +24,19 @@ export default function AllProducts() {
           </div>
         </div>
 
-        <ProductGrid products={products} />
+        {loading ? (
+          <p className="store-state" role="status">
+            جارٍ تحميل المنتجات…
+          </p>
+        ) : error ? (
+          <p className="store-state store-state--error" role="alert">
+            {error}
+          </p>
+        ) : products.length === 0 ? (
+          <p className="store-state">لا توجد منتجات متاحة حالياً.</p>
+        ) : (
+          <ProductGrid products={products} />
+        )}
       </div>
     </section>
   );

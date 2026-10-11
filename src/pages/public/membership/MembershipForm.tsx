@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { GENERIC_MEMBERSHIP_ERROR, submitMembershipApplication } from '@/data/membershipService';
 import BackToLanding from './components/BackToLanding';
 import GenderField from './components/GenderField';
 import InterestField from './components/InterestField';
@@ -75,27 +76,27 @@ function AgeIcon() {
   );
 }
 
-function InfoIcon() {
+function CheckIcon() {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 11v5" />
-      <path d="M12 8h.01" />
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <path d="M20 6 9 17l-5-5" />
     </svg>
   );
 }
 
 /**
- * Frontend-only electronic membership form.
+ * Electronic membership form.
  *
- * Everything is validated locally. On a valid submission nothing is sent or
- * stored, and the visitor is told clearly that electronic submission is not
- * available yet — no personal data is echoed back or logged.
+ * Everything is validated locally first, then submitted to the server-side
+ * endpoint which re-validates the values and persists the application in
+ * Supabase. On success the form shows a confirmation card.
  */
 export default function MembershipForm({ onBack }: MembershipFormProps) {
   const [values, setValues] = useState<MembershipFormValues>(EMPTY_VALUES);
   const [errors, setErrors] = useState<MembershipFormErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   /** Keys whose controls are plain text/number inputs. */
   type TextField = 'fullName' | 'phone' | 'city' | 'age' | 'expectations';
@@ -119,8 +120,12 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
     setErrors((current) => (current.interests ? { ...current, interests: undefined } : current));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
 
     const nextErrors = validateMembershipForm(values);
     setErrors(nextErrors);
@@ -133,13 +138,25 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
       return;
     }
 
-    // Frontend-only: no request is made, nothing is persisted.
-    setSubmitted(true);
+    setSubmitError(null);
+    setSubmitting(true);
+
+    try {
+      await submitMembershipApplication(values);
+      setSubmitted(true);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error && error.message ? error.message : GENERIC_MEMBERSHIP_ERROR,
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function handleReset() {
     setValues(EMPTY_VALUES);
     setErrors({});
+    setSubmitError(null);
   }
 
   if (submitted) {
@@ -150,22 +167,18 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
 
           <div className="mem-info-card" role="status" aria-live="polite">
             <span className="mem-info-card__icon" aria-hidden="true">
-              <InfoIcon />
+              <CheckIcon />
             </span>
-            <h1 className="mem-info-card__title">تم التحقق من المعلومات بنجاح</h1>
+            <h1 className="mem-info-card__title">تم إرسال طلب الانخراط بنجاح</h1>
             <p className="mem-info-card__text">
-              الإرسال الإلكتروني غير متاح حالياً، ولم يتم إرسال طلبك إلى الجمعية.
-            </p>
-            <p className="mem-info-card__note">
-              هذه الواجهة معاينة فقط؛ لن يتم حفظ بياناتك ولا إرسالها إلى أي جهة. يمكنك مراجعة
-              الاستمارة أو تعديل معلوماتك.
+              شكراً لك. تم استلام طلبك، وسيتواصل معك فريق الجمعية بعد مراجعته.
             </p>
             <button
               type="button"
               className="btn btn--primary btn--lg"
               onClick={() => setSubmitted(false)}
             >
-              العودة للاستمارة وتعديل المعلومات
+              العودة إلى الاستمارة
             </button>
           </div>
         </div>
@@ -209,6 +222,7 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
                     icon={<UserIcon />}
                     autoComplete="name"
                     required
+                    disabled={isSubmitting}
                   />
 
                   <MembershipTextField
@@ -224,6 +238,7 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
                     icon={<PhoneIcon />}
                     autoComplete="tel"
                     required
+                    disabled={isSubmitting}
                   />
 
                   <MembershipTextField
@@ -237,6 +252,7 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
                     icon={<CityIcon />}
                     autoComplete="address-level2"
                     required
+                    disabled={isSubmitting}
                   />
 
                   <MembershipTextField
@@ -251,6 +267,7 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
                     placeholder="أدخل سنك"
                     icon={<AgeIcon />}
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -258,6 +275,7 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
                   value={values.gender}
                   onChange={handleGenderChange}
                   error={errors.gender}
+                  disabled={isSubmitting}
                 />
               </div>
             </fieldset>
@@ -270,6 +288,7 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
                   value={values.interests}
                   onChange={handleInterestsChange}
                   error={errors.interests}
+                  disabled={isSubmitting}
                 />
               </div>
             </fieldset>
@@ -287,17 +306,32 @@ export default function MembershipForm({ onBack }: MembershipFormProps) {
                   placeholder="شاركنا انتظاراتك وكيف ترغب في الاستفادة من أنشطة الجمعية..."
                   multiline
                   rows={6}
+                  disabled={isSubmitting}
                 />
               </div>
             </fieldset>
 
+            {submitError ? (
+              <p className="form-alert" role="alert">
+                {submitError}
+              </p>
+            ) : null}
+
             <div className="mem-form__actions">
-              <button type="submit" className="btn btn--primary btn--lg">
-                <span className="btn__label">إرسال الاستمارة</span>
+              <button
+                type="submit"
+                className="btn btn--primary btn--lg"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? <span className="btn__spinner" aria-hidden="true" /> : null}
+                <span className="btn__label">
+                  {isSubmitting ? 'جارٍ الإرسال…' : 'إرسال الاستمارة'}
+                </span>
               </button>
               <button
                 type="button"
                 className="btn btn--outline btn--lg"
+                disabled={isSubmitting}
                 onClick={handleReset}
               >
                 <span className="btn__label">مسح الحقول</span>

@@ -1,15 +1,16 @@
 import ProductGrid from '@/components/store/ProductGrid';
-import { getBestSellerProducts } from '@/data/productService';
+import { getBestSellerProducts, useProducts } from '@/data/productService';
 
 /** Best sellers row — same minimal card, with a subtle rank marker. */
 export default function BestSellers() {
-  const products = getBestSellerProducts();
+  const { products, loading, error } = useProducts();
+
+  const available = products.filter((product) => product.stockStatus !== 'out_of_stock');
+  const flagged = getBestSellerProducts(products);
+  const shown = flagged.length > 0 ? flagged : available.slice(0, 4);
 
   return (
-    <section
-      className="section section--muted store-best"
-      aria-labelledby="store-best-title"
-    >
+    <section className="section section--muted store-best" aria-labelledby="store-best-title">
       <div className="container">
         <div className="store-head">
           <div className="store-head__text">
@@ -23,7 +24,19 @@ export default function BestSellers() {
           </div>
         </div>
 
-        <ProductGrid products={products} variant="ranked" />
+        {loading ? (
+          <p className="store-state" role="status">
+            جارٍ تحميل المنتجات…
+          </p>
+        ) : error ? (
+          <p className="store-state store-state--error" role="alert">
+            {error}
+          </p>
+        ) : shown.length === 0 ? (
+          <p className="store-state">لا توجد منتجات متاحة حالياً.</p>
+        ) : (
+          <ProductGrid products={shown} variant="ranked" />
+        )}
       </div>
     </section>
   );

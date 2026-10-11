@@ -14,7 +14,14 @@ export interface ProductCardProps {
  */
 export default function ProductCard({ product, rank }: ProductCardProps) {
   const image = product.images[0];
-  const badge = product.isNew ? 'جديد' : product.isBestSeller ? 'الأكثر طلباً' : undefined;
+  const outOfStock = product.stockStatus === 'out_of_stock';
+  const badge = outOfStock
+    ? 'غير متوفر'
+    : product.isNew
+      ? 'جديد'
+      : product.isBestSeller
+        ? 'الأكثر طلباً'
+        : undefined;
 
   return (
     <Link className="product-card" to={`/store/${product.slug}`} aria-label={product.name}>
@@ -30,7 +37,17 @@ export default function ProductCard({ product, rank }: ProductCardProps) {
           />
         ) : null}
 
-        {badge ? <span className="product-card__badge">{badge}</span> : null}
+        {badge ? (
+          <span
+            className={
+              outOfStock
+                ? 'product-card__badge product-card__badge--out'
+                : 'product-card__badge'
+            }
+          >
+            {badge}
+          </span>
+        ) : null}
         {rank ? (
           <span className="product-card__rank" aria-label={`المرتبة ${rank}`}>
             {rank}

@@ -1,4 +1,4 @@
-import type { MembershipFormErrors, MembershipFormValues } from './types';
+import type { MembershipFormErrors, MembershipFormValues } from './types.js';
 
 /** Digits only: no sign, decimal point or whitespace. */
 const AGE_PATTERN = /^\d+$/;

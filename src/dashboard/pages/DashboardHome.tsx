@@ -3,13 +3,17 @@ import QuickActionCard from '../components/QuickActionCard';
 import StatCard from '../components/StatCard';
 import { MailIcon, MicIcon, StoreIcon, TrophyIcon, UsersIcon } from '../components/icons';
 import { countContactRequests } from '../services/contactRequestsService';
+import { countCompetitions } from '../services/competitionsService';
+import { countMembers } from '../services/membersService';
+import { countParticipants } from '../services/participantsService';
+import { countProducts } from '../services/productsService';
 
 /**
  * Dashboard overview.
  *
- * Most statistics render the "not connected" state (`value={null}`) because no
- * data service exists yet. The Contact Requests count is wired to the real
- * admin API; on failure it stays `null` (never a misleading zero).
+ * The members, Golden Voice participants, competitions, store products and
+ * contact-request counts are wired to the real admin API; on failure they stay
+ * `null` (never a misleading zero).
  */
 
 const MEMBERS_LABEL = 'إجمالي المنخرطين';
@@ -19,8 +23,120 @@ const COMPETITIONS_LABEL = 'عدد المسابقات المتوفرة';
 const CONTACTS_LABEL = 'طلبات الاتصال';
 
 export default function DashboardHome() {
+  const [membersCount, setMembersCount] = useState<number | null>(null);
+  const [isLoadingMembers, setLoadingMembers] = useState(true);
+  const [participantsCount, setParticipantsCount] = useState<number | null>(null);
+  const [isLoadingParticipants, setLoadingParticipants] = useState(true);
+  const [competitionsCount, setCompetitionsCount] = useState<number | null>(null);
+  const [isLoadingCompetitions, setLoadingCompetitions] = useState(true);
+  const [productsCount, setProductsCount] = useState<number | null>(null);
+  const [isLoadingProducts, setLoadingProducts] = useState(true);
   const [contactsCount, setContactsCount] = useState<number | null>(null);
   const [isLoadingContacts, setLoadingContacts] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setLoadingMembers(true);
+
+    countMembers()
+      .then((count) => {
+        if (active) {
+          setMembersCount(count);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setMembersCount(null);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingMembers(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    setLoadingParticipants(true);
+
+    countParticipants()
+      .then((count) => {
+        if (active) {
+          setParticipantsCount(count);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setParticipantsCount(null);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingParticipants(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    setLoadingCompetitions(true);
+
+    countCompetitions()
+      .then((count) => {
+        if (active) {
+          setCompetitionsCount(count);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setCompetitionsCount(null);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingCompetitions(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    setLoadingProducts(true);
+
+    countProducts()
+      .then((count) => {
+        if (active) {
+          setProductsCount(count);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setProductsCount(null);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingProducts(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -56,10 +172,30 @@ export default function DashboardHome() {
         </h2>
 
         <div className="dash-stats">
-          <StatCard label={MEMBERS_LABEL} value={null} icon={<UsersIcon />} />
-          <StatCard label={PARTICIPANTS_LABEL} value={null} icon={<MicIcon />} />
-          <StatCard label={PRODUCTS_LABEL} value={null} icon={<StoreIcon />} />
-          <StatCard label={COMPETITIONS_LABEL} value={null} icon={<TrophyIcon />} />
+          <StatCard
+            label={MEMBERS_LABEL}
+            value={membersCount}
+            isLoading={isLoadingMembers}
+            icon={<UsersIcon />}
+          />
+          <StatCard
+            label={PARTICIPANTS_LABEL}
+            value={participantsCount}
+            isLoading={isLoadingParticipants}
+            icon={<MicIcon />}
+          />
+          <StatCard
+            label={PRODUCTS_LABEL}
+            value={productsCount}
+            isLoading={isLoadingProducts}
+            icon={<StoreIcon />}
+          />
+          <StatCard
+            label={COMPETITIONS_LABEL}
+            value={competitionsCount}
+            isLoading={isLoadingCompetitions}
+            icon={<TrophyIcon />}
+          />
           <StatCard
             label={CONTACTS_LABEL}
             value={contactsCount}

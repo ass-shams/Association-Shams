@@ -1,12 +1,18 @@
 import ProductGrid from '@/components/store/ProductGrid';
-import { getFeaturedProducts } from '@/data/productService';
+import { getFeaturedProducts, useProducts } from '@/data/productService';
 
 /** Visual-only filter controls. No filtering logic yet (deferred to a later stage). */
 const FILTERS = ['الكل', 'الأكثر طلباً', 'الجديد'] as const;
 
 /** Featured products section with a visual filter row and the product grid. */
 export default function FeaturedProducts() {
-  const products = getFeaturedProducts();
+  const { products, loading, error } = useProducts();
+
+  const available = products.filter((product) => product.stockStatus !== 'out_of_stock');
+  const flagged = getFeaturedProducts(products);
+  // Fall back to the newest available products so the section stays useful
+  // until administrators flag featured items.
+  const shown = flagged.length > 0 ? flagged : available.slice(0, 8);
 
   return (
     <section
@@ -40,7 +46,19 @@ export default function FeaturedProducts() {
           </div>
         </div>
 
-        <ProductGrid products={products} />
+        {loading ? (
+          <p className="store-state" role="status">
+            جارٍ تحميل المنتجات…
+          </p>
+        ) : error ? (
+          <p className="store-state store-state--error" role="alert">
+            {error}
+          </p>
+        ) : shown.length === 0 ? (
+          <p className="store-state">لا توجد منتجات متاحة حالياً.</p>
+        ) : (
+          <ProductGrid products={shown} />
+        )}
       </div>
     </section>
   );

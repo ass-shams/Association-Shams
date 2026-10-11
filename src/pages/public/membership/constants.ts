@@ -1,4 +1,4 @@
-import type { InterestValue } from './types';
+import type { InterestValue } from './types.js';
 
 /** Single membership fee, identical for every category. Paid offline only. */
 export const MEMBERSHIP_FEE_LABEL = 'واجب الانخراط: 50 درهم';

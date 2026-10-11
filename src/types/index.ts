@@ -101,6 +101,11 @@ export interface Competition {
   description: string
   /** Optional human-readable status shown on the card (e.g. مفتوحة). */
   status?: string
+  /**
+   * Effective registration state used to colour the status badge. Optional so
+   * presentation-only entries render without a badge.
+   */
+  statusTone?: 'open' | 'paused' | 'closed' | 'ended'
   /** Optional route to the competition's detail page, when one exists. */
   href?: string
   /** Optional cover image shown at the top of the card. */

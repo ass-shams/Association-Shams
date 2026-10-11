@@ -7,6 +7,14 @@ export interface CompetitionCardProps {
 
 const CTA_LABEL = 'المشاركة في المسابقة';
 
+/** Badge colour per effective registration state. */
+const STATUS_BADGE_CLASS: Record<NonNullable<Competition['statusTone']>, string> = {
+  open: 'badge badge--success competition-card__status',
+  paused: 'badge badge--warning competition-card__status',
+  closed: 'badge badge--danger competition-card__status',
+  ended: 'badge badge--neutral competition-card__status',
+};
+
 function CalendarIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
@@ -34,10 +42,14 @@ function UsersIcon() {
  * description, compact metadata and the main call to action.
  */
 export default function CompetitionCard({ competition }: CompetitionCardProps) {
-  const isActive = competition.status === 'مفتوحة';
+  const isActive = competition.statusTone === 'open';
   const cardClass = isActive
     ? 'card card--fill competition-card competition-card--active'
     : 'card card--fill competition-card';
+
+  const statusBadgeClass = competition.statusTone
+    ? STATUS_BADGE_CLASS[competition.statusTone]
+    : 'badge badge--success competition-card__status';
 
   const hasMeta =
     competition.registrationDeadline !== undefined || competition.participantsCount !== undefined;
@@ -62,7 +74,7 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
       <div className="card__body competition-card__body">
         <div className="competition-card__head">
           {competition.status ? (
-            <span className="badge badge--success competition-card__status">
+            <span className={statusBadgeClass}>
               <span className="competition-card__status-dot" aria-hidden="true" />
               {competition.status}
             </span>

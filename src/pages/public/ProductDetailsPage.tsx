@@ -5,18 +5,44 @@ import ProductInfo from '@/components/store/ProductInfo';
 import ProductMeta from '@/components/store/ProductMeta';
 import ProductTabs from '@/components/store/ProductTabs';
 import RelatedProducts from '@/components/store/RelatedProducts';
-import { getProductBySlug, getRelatedProducts } from '@/data/productService';
+import { getRelatedProducts, useProducts } from '@/data/productService';
 
 /**
- * Dynamic Product Details page. Reads the product from the slug in the URL via
- * the product service, so a single component renders every product. Product
+ * Dynamic Product Details page. Reads the product from the slug in the URL from
+ * the managed catalogue, so a single component renders every product. Product
  * content is never hardcoded here — it all comes from the data layer.
  *
  * Cart, checkout and review submission are intentionally not implemented yet.
  */
 export default function ProductDetailsPage() {
   const { slug } = useParams<{ slug: string }>();
-  const product = slug ? getProductBySlug(slug) : undefined;
+  const { products, loading, error } = useProducts();
+
+  const product = slug ? products.find((item) => item.slug === slug) : undefined;
+
+  if (loading) {
+    return (
+      <section className="section section--default section--pad-default">
+        <div className="container">
+          <p className="store-state" role="status">
+            جارٍ تحميل المنتج…
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="section section--default section--pad-default">
+        <div className="container">
+          <p className="store-state store-state--error" role="alert">
+            {error}
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   if (!product) {
     return (
@@ -34,7 +60,7 @@ export default function ProductDetailsPage() {
     );
   }
 
-  const relatedProducts = getRelatedProducts(product, 4);
+  const relatedProducts = getRelatedProducts(products, product, 4);
 
   return (
     <>

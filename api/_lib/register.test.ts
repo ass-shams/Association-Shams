@@ -8,6 +8,16 @@ const state = vi.hoisted(() => ({
   removed: [] as string[],
 }));
 
+const gate = vi.hoisted(() => ({
+  result: { ok: true, competitionId: 'comp-1' } as
+    | { ok: true; competitionId: string }
+    | { ok: false; reason: 'unavailable' | 'not-found' | 'not-open' },
+}));
+
+vi.mock('./competitions.js', () => ({
+  resolveGoldenVoiceRegistrationGate: async () => gate.result,
+}));
+
 vi.mock('./supabaseAdmin.js', () => ({
   getSupabaseAdmin: () => ({
     from: () => ({
@@ -70,6 +80,7 @@ beforeEach(() => {
   state.inserted = null;
   state.verify = { ok: true };
   state.removed = [];
+  gate.result = { ok: true, competitionId: 'comp-1' };
 });
 
 describe('POST /api/golden-voice/register (with video)', () => {
@@ -141,6 +152,12 @@ describe('validation and method handling', () => {
     expect(result.status).toBe(400);
   });
 
+  it('associates every registration with its competition', async () => {
+    const result = await call({ ...BASE, region: 'beni_mellal_khenifra' });
+    expect(result.status).toBe(201);
+    expect(state.inserted).toMatchObject({ competition_id: 'comp-1' });
+  });
+
   it('rejects missing required fields', async () => {
     const result = await call({ region: 'beni_mellal_khenifra' });
     expect(result.status).toBe(400);
@@ -155,5 +172,28 @@ describe('validation and method handling', () => {
   it('rejects non-POST methods', async () => {
     const result = await call({}, 'GET');
     expect(result.status).toBe(405);
+  });
+});
+
+describe('competition registration gate', () => {
+  it('refuses registration when the competition is not open', async () => {
+    gate.result = { ok: false, reason: 'not-open' };
+    const result = await call({ ...BASE, region: 'beni_mellal_khenifra' });
+    expect(result.status).toBe(403);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('fails closed when the competition is unavailable', async () => {
+    gate.result = { ok: false, reason: 'unavailable' };
+    const result = await call({ ...BASE, region: 'beni_mellal_khenifra' });
+    expect(result.status).toBe(503);
+    expect(state.inserted).toBeNull();
+  });
+
+  it('fails closed when the competition is missing', async () => {
+    gate.result = { ok: false, reason: 'not-found' };
+    const result = await call({ ...BASE, region: 'beni_mellal_khenifra' });
+    expect(result.status).toBe(503);
+    expect(state.inserted).toBeNull();
   });
 });
