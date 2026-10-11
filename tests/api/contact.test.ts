@@ -7,7 +7,7 @@ const state = vi.hoisted(() => ({
   turnstileSuccess: true,
 }));
 
-vi.mock('./_lib/supabaseAdmin.js', () => ({
+vi.mock('../../api/_lib/supabaseAdmin.js', () => ({
   getSupabaseAdmin: () => ({
     from: () => ({
       insert: async (row: Record<string, unknown>) => {
@@ -18,7 +18,7 @@ vi.mock('./_lib/supabaseAdmin.js', () => ({
   }),
 }));
 
-import handler from './contact.js';
+import handler from '../../api/contact.js';
 
 const BASE = {
   name: 'زائر تجريبي',

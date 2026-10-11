@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ServerResponse } from 'node:http';
-import type { AdminAuthResult } from '../_lib/adminAuth.js';
+import type { AdminAuthResult } from '../../../api/_lib/adminAuth.js';
 
 const state = vi.hoisted(() => ({
   result: { status: 'unauthenticated' } as AdminAuthResult,
 }));
 
-vi.mock('../_lib/adminAuth.js', () => ({
+vi.mock('../../../api/_lib/adminAuth.js', () => ({
   resolveAdmin: async () => state.result,
 }));
 
-import handler from './me.js';
+import handler from '../../../api/admin/_me.js';
 
 function createResponse() {
   let body = '';

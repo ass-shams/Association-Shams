@@ -6,7 +6,7 @@ const state = vi.hoisted(() => ({
   inserted: null as Record<string, unknown> | null,
 }));
 
-vi.mock('./_lib/supabaseAdmin.js', () => ({
+vi.mock('../../api/_lib/supabaseAdmin.js', () => ({
   getSupabaseAdmin: () => ({
     from: () => ({
       insert: async (row: Record<string, unknown>) => {
@@ -17,7 +17,7 @@ vi.mock('./_lib/supabaseAdmin.js', () => ({
   }),
 }));
 
-import handler from './membership.js';
+import handler from '../../api/membership.js';
 
 const BASE = {
   fullName: 'سعاد العلمي',

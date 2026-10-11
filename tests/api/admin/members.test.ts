@@ -8,12 +8,9 @@ const state = vi.hoisted(() => ({
   listRows: [] as Record<string, unknown>[],
   listCount: 0,
   listError: null as { code?: string } | null,
-  detailRow: null as Record<string, unknown> | null,
-  updateRow: null as Record<string, unknown> | null,
-  updateError: null as { code?: string } | null,
 }));
 
-vi.mock('../_lib/supabaseAdmin.js', () => {
+vi.mock('../../../api/_lib/supabaseAdmin.js', () => {
   function makeChain(awaitResult: () => unknown, singleResult: () => unknown) {
     const chain: Record<string, unknown> = {};
     const pass = () => chain;
@@ -45,12 +42,7 @@ vi.mock('../_lib/supabaseAdmin.js', () => {
           select: () =>
             makeChain(
               () => ({ data: state.listRows, count: state.listCount, error: state.listError }),
-              () => ({ data: state.detailRow, error: null }),
-            ),
-          update: () =>
-            makeChain(
               () => ({ data: null, error: null }),
-              () => ({ data: state.updateRow, error: state.updateError }),
             ),
         };
       },
@@ -58,10 +50,10 @@ vi.mock('../_lib/supabaseAdmin.js', () => {
   };
 });
 
-import handler from './contact-requests.js';
+import handler from '../../../api/admin/_members.js';
 
-const REQUEST_ID = '123e4567-e89b-12d3-a456-426614174000';
 const ADMIN_USER = { id: 'admin-1', email: 'admin@example.com' };
+const MEMBER_ID = '123e4567-e89b-12d3-a456-426614174000';
 
 function createResponse() {
   let body = '';
@@ -87,7 +79,6 @@ function createResponse() {
 interface CallOptions {
   method?: string;
   token?: string;
-  body?: unknown;
   url?: string;
 }
 
@@ -101,8 +92,7 @@ async function call(options: CallOptions = {}) {
     {
       method: options.method ?? 'GET',
       headers,
-      body: options.body,
-      url: options.url ?? '/api/admin/contact-requests',
+      url: options.url ?? '/api/admin/members',
     } as never,
     fake.res,
   );
@@ -116,9 +106,6 @@ beforeEach(() => {
   state.listRows = [];
   state.listCount = 0;
   state.listError = null;
-  state.detailRow = null;
-  state.updateRow = null;
-  state.updateError = null;
 });
 
 describe('authorization', () => {
@@ -143,7 +130,18 @@ describe('authorization', () => {
 
 describe('GET list', () => {
   it('returns newest-first data with count', async () => {
-    state.listRows = [{ id: REQUEST_ID, name: 'زائر', status: 'new' }];
+    state.listRows = [
+      {
+        id: MEMBER_ID,
+        full_name: 'سعاد العلمي',
+        phone: '0612345678',
+        city: 'بني ملال',
+        age: 22,
+        gender: 'female',
+        interests: ['ثقافية'],
+        expectations: null,
+      },
+    ];
     state.listCount = 1;
 
     const result = await call({ token: 'good-token' });
@@ -157,75 +155,19 @@ describe('GET list', () => {
     }
   });
 
+  it('accepts a search term', async () => {
+    const result = await call({ token: 'good-token', url: '/api/admin/members?q=%D8%A8%D9%86%D9%8A' });
+    expect(result.status).toBe(200);
+  });
+
   it('returns 500 when the list query fails', async () => {
     state.listError = { code: '42P01' };
     const result = await call({ token: 'good-token' });
     expect(result.status).toBe(500);
   });
-});
 
-describe('GET detail', () => {
-  it('returns a single request', async () => {
-    state.detailRow = { id: REQUEST_ID, status: 'new' };
-    const result = await call({ token: 'good-token', url: `/api/admin/contact-requests?id=${REQUEST_ID}` });
-    expect(result.status).toBe(200);
-    expect(result.json?.request).toMatchObject({ id: REQUEST_ID });
-  });
-
-  it('rejects a malformed id', async () => {
-    const result = await call({ token: 'good-token', url: '/api/admin/contact-requests?id=bad' });
-    expect(result.status).toBe(400);
-  });
-
-  it('returns 404 when the request does not exist', async () => {
-    state.detailRow = null;
-    const result = await call({ token: 'good-token', url: `/api/admin/contact-requests?id=${REQUEST_ID}` });
-    expect(result.status).toBe(404);
-  });
-});
-
-describe('PATCH status', () => {
-  it('rejects an unsupported status', async () => {
-    const result = await call({
-      method: 'PATCH',
-      token: 'good-token',
-      body: { id: REQUEST_ID, status: 'archived' },
-    });
-    expect(result.status).toBe(400);
-  });
-
-  it('rejects a malformed id', async () => {
-    const result = await call({
-      method: 'PATCH',
-      token: 'good-token',
-      body: { id: 'nope', status: 'resolved' },
-    });
-    expect(result.status).toBe(400);
-  });
-
-  it('updates the status', async () => {
-    state.updateRow = { id: REQUEST_ID, status: 'resolved' };
-    const result = await call({
-      method: 'PATCH',
-      token: 'good-token',
-      body: { id: REQUEST_ID, status: 'resolved' },
-    });
-    expect(result.status).toBe(200);
-    expect(result.json?.request).toMatchObject({ status: 'resolved' });
-  });
-
-  it('returns 404 when the request does not exist', async () => {
-    state.updateRow = null;
-    const result = await call({
-      method: 'PATCH',
-      token: 'good-token',
-      body: { id: REQUEST_ID, status: 'resolved' },
-    });
-    expect(result.status).toBe(404);
-  });
-
-  it('rejects unsupported methods', async () => {
-    const result = await call({ method: 'PUT', token: 'good-token' });
+  it('rejects non-GET methods', async () => {
+    const result = await call({ method: 'POST', token: 'good-token' });
     expect(result.status).toBe(405);
   });
 });

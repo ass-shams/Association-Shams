@@ -8,7 +8,7 @@ const state = vi.hoisted(() => ({
   countError: null as { code?: string } | null,
 }));
 
-vi.mock('./_lib/supabaseAdmin.js', () => ({
+vi.mock('../../api/_lib/supabaseAdmin.js', () => ({
   getSupabaseAdmin: () => ({
     from: (table: string) => {
       if (table === 'competitions') {
@@ -27,7 +27,7 @@ vi.mock('./_lib/supabaseAdmin.js', () => ({
   }),
 }));
 
-import handler from './competitions.js';
+import handler from '../../api/competitions.js';
 
 function createResponse() {
   let body = '';

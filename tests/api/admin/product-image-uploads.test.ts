@@ -11,7 +11,7 @@ const state = vi.hoisted(() => {
   };
 });
 
-vi.mock('../_lib/supabaseAdmin.js', () => ({
+vi.mock('../../../api/_lib/supabaseAdmin.js', () => ({
   getSupabaseAdmin: () => ({
     auth: {
       getUser: async () => ({ data: { user: state.user }, error: null }),
@@ -40,7 +40,7 @@ vi.mock('../_lib/supabaseAdmin.js', () => ({
   }),
 }));
 
-import handler from './product-image-uploads.js';
+import handler from '../../../api/admin/_product-image-uploads.js';
 
 const ADMIN_USER = { id: 'admin-1', email: 'admin@example.com' };
 

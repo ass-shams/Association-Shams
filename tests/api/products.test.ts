@@ -6,7 +6,7 @@ const state = vi.hoisted(() => ({
   listError: null as { code?: string } | null,
 }));
 
-vi.mock('./_lib/supabaseAdmin.js', () => ({
+vi.mock('../../api/_lib/supabaseAdmin.js', () => ({
   getSupabaseAdmin: () => ({
     from: () => ({
       select: () => ({
@@ -16,7 +16,7 @@ vi.mock('./_lib/supabaseAdmin.js', () => ({
   }),
 }));
 
-import handler from './products.js';
+import handler from '../../api/products.js';
 
 const ROW = {
   id: '123e4567-e89b-12d3-a456-426614174000',

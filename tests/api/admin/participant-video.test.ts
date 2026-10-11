@@ -12,7 +12,7 @@ const state = vi.hoisted(() => ({
   signedArgs: null as { path: string; expiresIn: number; options: unknown } | null,
 }));
 
-vi.mock('../_lib/supabaseAdmin.js', () => ({
+vi.mock('../../../api/_lib/supabaseAdmin.js', () => ({
   getSupabaseAdmin: () => ({
     auth: {
       getUser: async () => ({ data: { user: state.user }, error: state.userError }),
@@ -49,7 +49,7 @@ vi.mock('../_lib/supabaseAdmin.js', () => ({
   }),
 }));
 
-import handler from './participant-video.js';
+import handler from '../../../api/admin/_participant-video.js';
 
 const ADMIN_USER = { id: 'admin-1', email: 'admin@example.com' };
 const PARTICIPANT_ID = '123e4567-e89b-12d3-a456-426614174000';

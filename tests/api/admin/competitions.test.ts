@@ -13,7 +13,7 @@ const state = vi.hoisted(() => ({
   countError: null as { code?: string } | null,
 }));
 
-vi.mock('../_lib/supabaseAdmin.js', () => ({
+vi.mock('../../../api/_lib/supabaseAdmin.js', () => ({
   getSupabaseAdmin: () => ({
     auth: {
       getUser: async () => ({ data: { user: state.user }, error: state.userError }),
@@ -51,7 +51,7 @@ vi.mock('../_lib/supabaseAdmin.js', () => ({
   }),
 }));
 
-import handler from './competitions.js';
+import handler from '../../../api/admin/_competitions.js';
 
 const ADMIN_USER = { id: 'admin-1', email: 'admin@example.com' };
 const COMPETITION_ID = '123e4567-e89b-12d3-a456-426614174000';

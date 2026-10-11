@@ -17,7 +17,7 @@
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { existsSync } from 'node:fs';
-import { stat } from 'node:fs/promises';
+import { readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -50,10 +50,24 @@ async function resolveHandler(pathname: string): Promise<string | null> {
     return null;
   }
 
+  const segments = relative.split('/').filter(Boolean);
+  const directory = path.join(API_ROOT, ...segments.slice(0, -1));
+
   const candidates = [
     path.join(API_ROOT, `${relative}.ts`),
     path.join(API_ROOT, relative, 'index.ts'),
   ];
+
+  // Match Vercel's single dynamic segment routes (for example `api/admin/[route].ts`).
+  try {
+    const entries = await readdir(directory);
+    const dynamic = entries.find((name) => /^\[[^\]]+\]\.ts$/.test(name));
+    if (dynamic) {
+      candidates.push(path.join(directory, dynamic));
+    }
+  } catch {
+    // Directory is missing or unreadable; the static candidates still apply.
+  }
 
   for (const candidate of candidates) {
     if (!candidate.startsWith(API_ROOT + path.sep)) {

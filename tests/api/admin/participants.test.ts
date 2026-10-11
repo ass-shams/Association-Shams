@@ -10,7 +10,7 @@ const state = vi.hoisted(() => ({
   listError: null as { code?: string } | null,
 }));
 
-vi.mock('../_lib/supabaseAdmin.js', () => {
+vi.mock('../../../api/_lib/supabaseAdmin.js', () => {
   function makeChain(awaitResult: () => unknown, singleResult: () => unknown) {
     const chain: Record<string, unknown> = {};
     const pass = () => chain;
@@ -48,7 +48,7 @@ vi.mock('../_lib/supabaseAdmin.js', () => {
   };
 });
 
-import handler from './participants.js';
+import handler from '../../../api/admin/_participants.js';
 
 const ADMIN_USER = { id: 'admin-1', email: 'admin@example.com' };
 const PARTICIPANT_ID = '123e4567-e89b-12d3-a456-426614174000';
