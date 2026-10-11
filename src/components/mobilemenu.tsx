@@ -127,17 +127,29 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
         <nav aria-label="التنقل الرئيسي">
           <ul className="drawer__list">
             {NAV_LINKS.map((link) => (
-              <li key={link.to} className="drawer__item">
-                <NavLink
-                  className={({ isActive }) =>
-                    isActive ? 'drawer__link drawer__link--active' : 'drawer__link'
-                  }
-                  to={link.to}
-                  end={link.to === '/'}
-                  onClick={onClose}
-                >
-                  {link.label}
-                </NavLink>
+              <li key={link.label} className="drawer__item">
+                {link.external ? (
+                  <a
+                    className="drawer__link"
+                    href={link.to}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={onClose}
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <NavLink
+                    className={({ isActive }) =>
+                      isActive ? 'drawer__link drawer__link--active' : 'drawer__link'
+                    }
+                    to={link.to}
+                    end={link.to === '/'}
+                    onClick={onClose}
+                  >
+                    {link.label}
+                  </NavLink>
+                )}
               </li>
             ))}
           </ul>

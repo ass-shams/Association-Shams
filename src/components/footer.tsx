@@ -5,7 +5,7 @@ import logo from '@/assets/navbar-footer.png';
 /** Association identity, kept in sync with the wording used across the site. */
 const BRAND_NAME = 'جمعية شمس للكفيف والمبصر';
 const BRAND_DESCRIPTION =
-  'منظمة مغربية رائدة تأسست بمدينة بني ملال، وتشكّل جسراً تضامنياً يهدف إلى تحقيق الإدماج الشامل للمكفوفين وضعاف البصر داخل المجتمع جنباً إلى جنب مع المبصرين.';
+  'منظمة مغربية رائدة تأسست بمدينة بني ملال في 26/09/2018 ، وتشكّل جسراً تضامنياً يهدف إلى تحقيق الإدماج الشامل للمكفوفين وضعاف البصر داخل المجتمع جنباً إلى جنب مع المبصرين.';
 
 function MailIcon() {
   return (
@@ -94,7 +94,7 @@ const CONTACT_ITEMS: readonly ContactItem[] = [
   {
     id: 'address',
     icon: LocationIcon,
-    links: [{ text: 'الجيش الملكي , بني ملال, المغرب, 23000' }],
+    links: [{ text: 'تجزئة فتح الأغراس رقم 20  الطابق الأول بني ملال  قرب ملعب القرب المجاور لمقهى بن داود' }],
   },
 ];
 

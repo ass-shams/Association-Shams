@@ -6,6 +6,7 @@ import logo from '@/assets/navbar-footer.png';
 export interface NavLinkItem {
   to: string;
   label: string;
+  external?: boolean;
 }
 
 /** Top navigation, hardcoded here and reused by the mobile menu. */
@@ -17,6 +18,8 @@ export const NAV_LINKS: readonly NavLinkItem[] = [
   { to: '/documents', label: 'الوثائق الإدارية' },
   { to: '/membership', label: 'الانخراط' },
   { to: '/competitions', label: 'المسابقات' },
+  { to: 'https://www.facebook.com/Association.chams', label: 'مخيمات', external: true },
+  { to: 'https://www.facebook.com/Association.chams', label: 'رحلات', external: true },
   { to: '/contact', label: 'اتصل بنا' },
 ];
 
@@ -57,16 +60,27 @@ export default function Navbar() {
         <nav className="site-nav" aria-label="التنقل الرئيسي">
           <ul className="site-nav__list">
             {NAV_LINKS.map((link) => (
-              <li key={link.to}>
-                <NavLink
-                  className={({ isActive }) =>
-                    isActive ? 'site-nav__link site-nav__link--active' : 'site-nav__link'
-                  }
-                  to={link.to}
-                  end={link.to === '/'}
-                >
-                  {link.label}
-                </NavLink>
+              <li key={link.label}>
+                {link.external ? (
+                  <a
+                    className="site-nav__link"
+                    href={link.to}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <NavLink
+                    className={({ isActive }) =>
+                      isActive ? 'site-nav__link site-nav__link--active' : 'site-nav__link'
+                    }
+                    to={link.to}
+                    end={link.to === '/'}
+                  >
+                    {link.label}
+                  </NavLink>
+                )}
               </li>
             ))}
           </ul>

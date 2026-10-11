@@ -635,6 +635,7 @@ button:disabled,
   .site-header__inner {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    max-inline-size: var(--container-wide);
   }
 
   .site-brand {
@@ -649,7 +650,7 @@ button:disabled,
   }
 
   .site-nav__list {
-    gap: var(--sp-3);
+    gap: var(--sp-4);
   }
 
   .site-nav__link {
@@ -673,7 +674,7 @@ button:disabled,
 
 @media (width >= 1440px) {
   .site-nav__list {
-    gap: var(--sp-5);
+    gap: var(--sp-6);
   }
 
   .site-nav__link {
@@ -7437,12 +7438,30 @@ a.footer-contact__value:hover {
 }
 
 @media (width < 560px) {
-  /* Let the credit wrap instead of colliding with the page title. */
+  /* On small screens the credit drops to its own row, end-aligned, so it can
+     wrap freely and never crowds the page title or the menu button. */
+  .dash-header {
+    flex-wrap: wrap;
+    row-gap: var(--sp-2);
+  }
+
+  .dash-header__title {
+    min-inline-size: 0;
+  }
+
+  .dash-header__account {
+    margin-inline-start: auto;
+  }
+
   .dash-header__credit {
     white-space: normal;
     overflow: visible;
-    max-inline-size: 52%;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    max-inline-size: none;
     font-size: 0.75rem;
+    line-height: var(--lh-compact);
+    text-align: start;
   }
 }
 
