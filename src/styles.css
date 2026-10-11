@@ -4247,10 +4247,6 @@ a.footer-contact__value:hover {
   position: relative;
   overflow: hidden;
   aspect-ratio: 4 / 3;
-  border: 6px solid var(--c-white);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-lg);
-  background-color: var(--c-bg);
 }
 
 .store-hero__media img {
@@ -4491,66 +4487,7 @@ a.footer-contact__value:hover {
   background-color: var(--c-yellow);
 }
 
-/* --- 13.5 Promotional banner --- */
-
-.store-promo {
-  background-color: var(--c-blue-strong);
-  background-image: linear-gradient(135deg, var(--c-blue-strong) 0%, var(--c-blue-text) 100%);
-  color: var(--c-white);
-}
-
-.store-promo__inner {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--sp-6);
-  align-items: center;
-}
-
-.store-promo__content {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--sp-4);
-  min-inline-size: 0;
-}
-
-.store-promo__title {
-  margin: 0;
-  max-inline-size: 20ch;
-  font-size: clamp(1.5rem, 1.2rem + 1.6vw, 2.5rem);
-  line-height: 1.2;
-  color: var(--c-white);
-}
-
-.store-promo__text {
-  margin: 0;
-  max-inline-size: var(--container-prose);
-  color: rgb(255 255 255 / 84%);
-}
-
-.store-promo__actions {
-  margin-block-start: var(--sp-1);
-}
-
-.store-promo__media {
-  overflow: hidden;
-  aspect-ratio: 4 / 3;
-  border: 6px solid rgb(255 255 255 / 18%);
-  border-radius: var(--r-lg);
-  background-color: var(--c-blue-text);
-}
-
-.store-promo__media img {
-  display: block;
-  inline-size: 100%;
-  block-size: 100%;
-  object-fit: cover;
-  -webkit-user-drag: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-
-/* --- 13.6 Responsive upgrades --- */
+/* --- 13.5 Responsive upgrades --- */
 
 @media (width >= 640px) {
   .product-grid {
@@ -4577,11 +4514,6 @@ a.footer-contact__value:hover {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
     gap: var(--sp-8);
   }
-
-  .store-promo__inner {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
-    gap: var(--sp-8);
-  }
 }
 
 @media (width >= 1024px) {
@@ -4591,8 +4523,7 @@ a.footer-contact__value:hover {
 }
 
 @media (width < 900px) {
-  .store-hero__media,
-  .store-promo__media {
+  .store-hero__media {
     aspect-ratio: 16 / 10;
     max-block-size: 360px;
   }

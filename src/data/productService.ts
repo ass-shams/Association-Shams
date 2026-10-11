@@ -8,9 +8,9 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import type { Product, ProductImage, ProductReview } from '@/types';
-import { storeHeroImage, storePromoImage } from '@/data/productCatalog';
+import { storeHeroImage } from '@/data/productCatalog';
 
-export { storeHeroImage, storePromoImage };
+export { storeHeroImage };
 
 export const CURRENCY_LABEL = 'درهم';
 

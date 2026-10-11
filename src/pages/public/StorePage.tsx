@@ -4,7 +4,6 @@ import BestSellers from '@/components/store/BestSellers';
 import FeaturedProducts from '@/components/store/FeaturedProducts';
 import StoreBenefits from '@/components/store/StoreBenefits';
 import StoreHero from '@/components/store/StoreHero';
-import StorePromoBanner from '@/components/store/StorePromoBanner';
 
 /**
  * Store page — storefront UI only (جمعية شمس للكفيف والمبصر).
@@ -21,7 +20,6 @@ export default function StorePage() {
       <StoreHero />
       <StoreBenefits />
       <FeaturedProducts />
-      <StorePromoBanner />
       <AllProducts />
       <BestSellers />
       <FinalCTA
