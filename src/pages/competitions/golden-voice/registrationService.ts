@@ -20,6 +20,8 @@ interface SignedUpload {
   bucket: string;
   path: string;
   token: string;
+  /** One-time ticket the registration endpoint must claim. */
+  ticketId: string;
 }
 
 /** Submission stages shown to the visitor. */
@@ -62,12 +64,19 @@ async function readErrorMessage(response: Response, fallback: string): Promise<s
   return fallback;
 }
 
-/** Request a signed upload URL for one new, server-generated object path. */
-async function createSignedUpload(contentType: string): Promise<SignedUpload> {
+/**
+ * Request a signed upload URL for one new, server-generated object path. The
+ * Turnstile token authorizes the request; the server returns a one-time ticket
+ * that the registration step must present.
+ */
+async function createSignedUpload(
+  contentType: string,
+  turnstileToken: string,
+): Promise<SignedUpload> {
   const response = await fetch(UPLOADS_ENDPOINT, {
     method: 'POST',
     headers: JSON_HEADERS,
-    body: JSON.stringify({ region: OTHER_REGION, contentType }),
+    body: JSON.stringify({ region: OTHER_REGION, contentType, turnstileToken }),
   });
 
   if (!response.ok) {
@@ -75,11 +84,11 @@ async function createSignedUpload(contentType: string): Promise<SignedUpload> {
   }
 
   const data = (await response.json()) as Partial<SignedUpload>;
-  if (!data.bucket || !data.path || !data.token) {
+  if (!data.bucket || !data.path || !data.token || !data.ticketId) {
     throw new Error(GENERIC_SUBMIT_ERROR);
   }
 
-  return { bucket: data.bucket, path: data.path, token: data.token };
+  return { bucket: data.bucket, path: data.path, token: data.token, ticketId: data.ticketId };
 }
 
 /**
@@ -247,11 +256,13 @@ async function register(payload: Record<string, unknown>, signal?: AbortSignal):
  * Full submission flow.
  *
  * `region === "other"`:
- *   1. request a signed upload URL from the server,
+ *   1. request a signed upload URL from the server (authorized by the Turnstile
+ *      token, which also yields a one-time upload ticket),
  *   2. upload the video straight to the private bucket with real progress,
- *   3. register with the resulting object path, which the server re-validates.
- * `region` inside Beni Mellal-Khenifra: register without a video and report a
- * plain processing state (no upload percentage).
+ *   3. register by claiming the ticket; the server derives the object path from
+ *      the ticket and re-validates the video.
+ * `region` inside Beni Mellal-Khenifra: register without a video (authorized by
+ * the Turnstile token) and report a plain processing state.
  *
  * The server performs the authoritative validation and is the only component
  * allowed to write to the database with privileged credentials.
@@ -259,6 +270,7 @@ async function register(payload: Record<string, unknown>, signal?: AbortSignal):
 export async function submitGoldenVoiceRegistration(
   values: GoldenVoiceSubmissionValues,
   video: SelectedVideo | null,
+  turnstileToken: string,
   onProgress?: OnSubmissionProgress,
   signal?: AbortSignal,
 ): Promise<void> {
@@ -269,7 +281,12 @@ export async function submitGoldenVoiceRegistration(
       throw new Error(VIDEO_REQUIRED_MESSAGE);
     }
 
-    const upload = await createSignedUpload(resolveVideoContentType(video.file));
+    // The Turnstile token authorizes the upload; the returned ticket authorizes
+    // the registration. The client never chooses the object path.
+    const upload = await createSignedUpload(
+      resolveVideoContentType(video.file),
+      turnstileToken,
+    );
 
     report({ phase: 'uploading', percent: 0 });
     await uploadToSignedUrlWithProgress(
@@ -282,10 +299,10 @@ export async function submitGoldenVoiceRegistration(
     );
 
     report({ phase: 'processing', percent: 100 });
-    await register({ ...values, videoPath: upload.path }, signal);
+    await register({ ...values, ticketId: upload.ticketId }, signal);
     return;
   }
 
   report({ phase: 'processing', percent: 0 });
-  await register({ ...values }, signal);
+  await register({ ...values, turnstileToken }, signal);
 }

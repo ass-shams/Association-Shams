@@ -84,9 +84,10 @@ export interface TurnstileWidgetProps {
 /**
  * Cloudflare Turnstile widget (Managed mode, explicit render).
  *
- * Lightweight, client-side only: it obtains a token locally. There is no
- * server-side verification in this project yet, so it is a soft anti-bot layer,
- * not equivalent to server-side bot protection.
+ * Lightweight, client-side challenge UI: it obtains a token locally. The token
+ * is verified server-side by whichever endpoint consumes it (for example
+ * `/api/contact` and the Golden Voice registration/upload endpoints), so the
+ * widget itself is never the security boundary.
  */
 const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidgetProps>(
   function TurnstileWidget({ onVerify, onExpire, onError }, ref) {

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import TurnstileWidget from '@/components/contact/TurnstileWidget';
+import type { TurnstileWidgetHandle } from '@/components/contact/TurnstileWidget';
 import RegistrationField from './RegistrationField';
 import RegionField from './RegionField';
 import VideoUploadField from './VideoUploadField';
@@ -84,6 +86,9 @@ export default function GoldenVoiceRegistrationForm() {
   const [submitError, setSubmitError] = useState('');
   const submittingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileError, setTurnstileError] = useState('');
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   const isOtherRegion = values.region === OTHER_REGION;
   const isSubmitting = phase !== 'idle';
@@ -127,6 +132,25 @@ export default function GoldenVoiceRegistrationForm() {
     setErrors((current) => ({ ...current, video: message || undefined }));
   }
 
+  function resetTurnstile() {
+    setTurnstileToken('');
+    turnstileRef.current?.reset();
+  }
+
+  function handleTurnstileVerify(token: string) {
+    setTurnstileToken(token);
+    setTurnstileError('');
+  }
+
+  function handleTurnstileExpire() {
+    setTurnstileToken('');
+  }
+
+  function handleTurnstileError() {
+    setTurnstileToken('');
+    setTurnstileError('تعذّر إكمال التحقق. المرجو المحاولة مرة أخرى.');
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -148,6 +172,12 @@ export default function GoldenVoiceRegistrationForm() {
       return;
     }
 
+    if (!turnstileToken) {
+      setTurnstileError('المرجو إكمال التحقق قبل إرسال الطلب.');
+      return;
+    }
+    setTurnstileError('');
+
     const controller = new AbortController();
     abortRef.current = controller;
 
@@ -165,6 +195,7 @@ export default function GoldenVoiceRegistrationForm() {
           region: values.region as RegionValue,
         },
         video,
+        turnstileToken,
         ({ phase: nextPhase, percent }) => {
           setPhase(nextPhase);
           setProgress(percent);
@@ -173,6 +204,7 @@ export default function GoldenVoiceRegistrationForm() {
       );
 
       setSubmitted(true);
+      resetTurnstile();
     } catch (error) {
       // Ignore the intentional abort fired when the page unmounts.
       if (!controller.signal.aborted) {
@@ -182,6 +214,8 @@ export default function GoldenVoiceRegistrationForm() {
         setSubmitError(
           error instanceof Error && error.message ? error.message : GENERIC_SUBMIT_ERROR,
         );
+        // The Turnstile token is single-use; obtain a fresh one for the retry.
+        resetTurnstile();
       }
     } finally {
       submittingRef.current = false;
@@ -318,6 +352,18 @@ export default function GoldenVoiceRegistrationForm() {
           )}
         </div>
       ) : null}
+
+      <div className="turnstile-row">
+        <TurnstileWidget
+          ref={turnstileRef}
+          onVerify={handleTurnstileVerify}
+          onExpire={handleTurnstileExpire}
+          onError={handleTurnstileError}
+        />
+        {turnstileError ? (
+          <p className="field__message field__error">{turnstileError}</p>
+        ) : null}
+      </div>
 
       <div className="gv-form__actions">
         <button

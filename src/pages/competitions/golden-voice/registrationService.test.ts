@@ -3,6 +3,7 @@ import {
   buildSignedUploadUrl,
   resolveUploadTotal,
   resolveVideoContentType,
+  submitGoldenVoiceRegistration,
   uploadPercent,
   uploadToSignedUrlWithProgress,
 } from './registrationService';
@@ -57,7 +58,12 @@ class FakeXMLHttpRequest {
   }
 }
 
-const UPLOAD = { bucket: 'golden-voice-videos', path: 'golden-voice/abc.mp4', token: 'tok' };
+const UPLOAD = {
+  bucket: 'golden-voice-videos',
+  path: 'golden-voice/abc.mp4',
+  token: 'tok',
+  ticketId: 'ticket-1',
+};
 
 beforeEach(() => {
   FakeXMLHttpRequest.instances = [];
@@ -187,7 +193,7 @@ describe('uploadToSignedUrlWithProgress', () => {
     const percents: number[] = [];
 
     const promise = uploadToSignedUrlWithProgress(
-      { bucket: 'golden-voice-videos', path: 'golden-voice/x.webm', token: 't' },
+      { bucket: 'golden-voice-videos', path: 'golden-voice/x.webm', token: 't', ticketId: 'ticket-2' },
       file,
       (percent) => percents.push(percent),
     );
@@ -226,5 +232,74 @@ describe('uploadToSignedUrlWithProgress', () => {
     controller.abort();
 
     await expect(promise).rejects.toThrow();
+  });
+});
+
+describe('submitGoldenVoiceRegistration', () => {
+  it('authorizes the upload with Turnstile and registers with the ticket', async () => {
+    const calls: { url: string; body: Record<string, unknown> }[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        calls.push({ url, body: init?.body ? JSON.parse(String(init.body)) : {} });
+        if (url === '/api/golden-voice/uploads') {
+          return {
+            ok: true,
+            json: async () => ({
+              bucket: 'golden-voice-videos',
+              path: 'golden-voice/x.mp4',
+              token: 'tok',
+              ticketId: 'ticket-9',
+            }),
+          } as Response;
+        }
+        return { ok: true, json: async () => ({ ok: true }) } as Response;
+      }),
+    );
+
+    const file = new File([new Uint8Array(8)], 'clip.mp4', { type: 'video/mp4' });
+    const promise = submitGoldenVoiceRegistration(
+      { fullName: 'سعاد', phone: '0612345678', age: 22, city: 'بني ملال', region: 'other' },
+      { file, durationSeconds: 10 },
+      'turnstile-token',
+    );
+
+    await vi.waitFor(() => expect(FakeXMLHttpRequest.instances).toHaveLength(1));
+    FakeXMLHttpRequest.instances[0].onload?.();
+    await promise;
+
+    expect(calls).toHaveLength(2);
+    expect(calls[0].url).toBe('/api/golden-voice/uploads');
+    expect(calls[0].body).toMatchObject({ region: 'other', turnstileToken: 'turnstile-token' });
+    expect(calls[1].url).toBe('/api/golden-voice/register');
+    expect(calls[1].body).toMatchObject({ ticketId: 'ticket-9' });
+    expect(calls[1].body).not.toHaveProperty('videoPath');
+  });
+
+  it('registers the no-video region with the Turnstile token', async () => {
+    const calls: { url: string; body: Record<string, unknown> }[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        calls.push({ url, body: init?.body ? JSON.parse(String(init.body)) : {} });
+        return { ok: true, json: async () => ({ ok: true }) } as Response;
+      }),
+    );
+
+    await submitGoldenVoiceRegistration(
+      {
+        fullName: 'سعاد',
+        phone: '0612345678',
+        age: 22,
+        city: 'بني ملال',
+        region: 'beni_mellal_khenifra',
+      },
+      null,
+      'turnstile-token',
+    );
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe('/api/golden-voice/register');
+    expect(calls[0].body).toMatchObject({ turnstileToken: 'turnstile-token' });
   });
 });

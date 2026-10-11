@@ -4,6 +4,9 @@ import { methodNotAllowed, sendJson } from '../_lib/http.js';
 import type { ApiRequest } from '../_lib/http.js';
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { GOLDEN_VOICE_BUCKET, VIDEO_PATH_PREFIX, readJsonBody } from '../_lib/goldenVoice.js';
+import { createUploadTicket } from '../_lib/tickets.js';
+import { consumeRateLimit, hashIdentifier } from '../_lib/rateLimit.js';
+import { firstForwardedIp, verifyTurnstile } from '../_lib/turnstile.js';
 import { OTHER_REGION } from '../../src/pages/competitions/golden-voice/constants.js';
 import {
   getVideoExtensionForMime,
@@ -12,13 +15,25 @@ import {
 } from '../../src/pages/competitions/golden-voice/validation.js';
 
 const SERVICE_UNAVAILABLE_MESSAGE = 'الخدمة غير متاحة مؤقتاً. المرجو المحاولة لاحقاً.';
+const CAPTCHA_FAILED_MESSAGE = 'تعذّر إكمال التحقق. المرجو المحاولة مرة أخرى.';
+const TOO_MANY_MESSAGE = 'عدد كبير من المحاولات. المرجو المحاولة لاحقاً.';
+
+/** Persistent per-IP ceiling for signed-upload issuance (fixed one-hour window). */
+const UPLOAD_RATE_LIMIT = 5;
+const UPLOAD_RATE_WINDOW_SECONDS = 60 * 60;
 
 /**
  * Issue a short-lived signed upload URL for a brand-new, non-guessable object
  * path. The browser uploads the video directly to the private bucket, which
  * keeps large videos out of the serverless request/response body limit.
  *
- * Participants from Beni Mellal-Khenifra receive `videoPath: null`.
+ * The request must pass server-side Turnstile verification and the persistent
+ * rate limit. On success a one-time upload ticket is created and returned; the
+ * registration endpoint later claims it, so a client cannot register a video
+ * that was never authorized by this endpoint.
+ *
+ * Participants from Beni Mellal-Khenifra receive `videoPath: null` and never
+ * reach the upload path.
  */
 export default async function handler(req: ApiRequest, res: ServerResponse) {
   if (req.method !== 'POST') {
@@ -36,6 +51,32 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
     return sendJson(res, 200, { videoPath: null });
   }
 
+  const turnstileToken = typeof body?.turnstileToken === 'string' ? body.turnstileToken.trim() : '';
+  if (!turnstileToken) {
+    return sendJson(res, 400, { message: CAPTCHA_FAILED_MESSAGE });
+  }
+
+  const remoteIp = firstForwardedIp(req);
+  const verification = await verifyTurnstile(turnstileToken, remoteIp);
+  if (verification === 'unavailable') {
+    return sendJson(res, 503, { message: SERVICE_UNAVAILABLE_MESSAGE });
+  }
+  if (verification !== 'ok') {
+    return sendJson(res, 400, { message: CAPTCHA_FAILED_MESSAGE });
+  }
+
+  const rate = await consumeRateLimit(
+    `gv-upload:${hashIdentifier(remoteIp ?? 'unknown')}`,
+    UPLOAD_RATE_LIMIT,
+    UPLOAD_RATE_WINDOW_SECONDS,
+  );
+  if (rate === 'unavailable') {
+    return sendJson(res, 503, { message: SERVICE_UNAVAILABLE_MESSAGE });
+  }
+  if (rate === 'limited') {
+    return sendJson(res, 429, { message: TOO_MANY_MESSAGE });
+  }
+
   const contentType =
     typeof body?.contentType === 'string' ? body.contentType.trim().toLowerCase() : '';
 
@@ -45,6 +86,11 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
   }
 
   const objectPath = `${VIDEO_PATH_PREFIX}/${randomUUID()}.${extension}`;
+
+  const ticket = await createUploadTicket(objectPath, OTHER_REGION);
+  if (ticket.ok === false) {
+    return sendJson(res, 503, { message: SERVICE_UNAVAILABLE_MESSAGE });
+  }
 
   try {
     const admin = getSupabaseAdmin();
@@ -63,6 +109,7 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
       bucket: GOLDEN_VOICE_BUCKET,
       path: data.path,
       token: data.token,
+      ticketId: ticket.id,
     });
   } catch (error) {
     console.error(
