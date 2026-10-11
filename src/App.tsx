@@ -8,6 +8,7 @@ import Competitions from '@/pages/competitions/Competitions';
 import GoldenVoice from '@/pages/competitions/golden-voice/GoldenVoice';
 import ContactPage from '@/pages/public/ContactPage';
 import DocumentsPage from '@/pages/public/DocumentsPage';
+import DonationsPage from '@/pages/public/DonationsPage';
 import GoldenVoicePage from '@/pages/public/GoldenVoicePage';
 import HomePage from '@/pages/public/HomePage';
 import MembershipPage from '@/pages/public/MembershipPage';
@@ -95,6 +96,16 @@ const PUBLIC_PAGE_SEO: Readonly<Record<string, PageSeo>> = {
     description:
       'انخرط في جمعية شمس للكفيف والمبصر: تعرّف على الوثائق المطلوبة وقدّم طلب الانخراط إلكترونياً.',
     path: '/membership',
+  },
+  '/donations': {
+    pageTitle: 'التبرعات',
+    description:
+      'ساهم في دعم جمعية شمس للكفيف والمبصر عبر التبرع بالتحويل البنكي إلى الحساب الرسمي للجمعية، وكن جزءاً من رسالتها في خدمة المكفوفين والمبصرين.',
+    path: '/donations',
+    breadcrumbs: [
+      { name: 'الرئيسية', path: '/' },
+      { name: 'التبرعات', path: '/donations' },
+    ],
   },
   '/golden-voice': {
     pageTitle: 'مسابقة الصوت الذهبي',
@@ -194,6 +205,7 @@ function PublicSite() {
             <Route path="/store/:slug" element={<ProductDetailsPage />} />
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/membership" element={<MembershipPage />} />
+            <Route path="/donations" element={<DonationsPage />} />
             <Route path="/golden-voice" element={<GoldenVoicePage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="*" element={<NotFoundPage />} />

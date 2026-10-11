@@ -17,6 +17,7 @@ export const NAV_LINKS: readonly NavLinkItem[] = [
   { to: '/store', label: 'المتجر' },
   { to: '/documents', label: 'الوثائق الإدارية' },
   { to: '/membership', label: 'الانخراط' },
+  { to: '/donations', label: 'التبرعات' },
   { to: '/competitions', label: 'المسابقات' },
   { to: 'https://www.facebook.com/Association.chams', label: 'مخيمات', external: true },
   { to: 'https://www.facebook.com/Association.chams', label: 'رحلات', external: true },

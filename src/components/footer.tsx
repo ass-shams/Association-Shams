@@ -63,6 +63,7 @@ const QUICK_LINKS: readonly FooterLink[] = [
   { to: '/about', label: 'من نحن' },
   { to: '/activities', label: 'أنشطتنا' },
   { to: '/store', label: 'المتجر' },
+  { to: '/donations', label: 'التبرعات' },
 ];
 
 interface ContactLink {

@@ -6819,7 +6819,217 @@ a.footer-contact__value:hover {
 }
 
 /* ==========================================================================
-   17. DASHBOARD — AUTHENTICATION
+   17. DONATIONS PAGE
+   ========================================================================== */
+
+.donations-hero__inner {
+  margin-block-start: var(--sp-5);
+}
+
+.donations-bank {
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.donations-bank::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  block-size: 4px;
+  background-color: var(--c-yellow);
+}
+
+.donations-bank__header {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding-block-start: var(--sp-6);
+}
+
+.donations-bank__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: var(--r-md);
+  background-color: var(--c-blue-tint);
+  color: var(--c-blue-strong);
+}
+
+.donations-bank__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-inline-size: 0;
+}
+
+.donations-bank__note {
+  margin: 0;
+  color: var(--c-text-soft);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+}
+
+.donations-bank__body {
+  gap: var(--sp-5);
+}
+
+.donations-account {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: clamp(var(--sp-4), 3vw, var(--sp-5));
+  background-color: var(--c-blue-tint);
+  border: 1px solid var(--c-blue-tint-strong);
+  border-radius: var(--r-lg);
+}
+
+.donations-account__label {
+  font-size: var(--fs-small);
+  font-weight: var(--fw-semibold);
+  color: var(--c-blue-text);
+}
+
+/* Explicit LTR so the 24 digits keep their exact order in the RTL layout. */
+.donations-account__value {
+  margin: 0;
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-size: clamp(1.05rem, 0.9rem + 1.2vw, 1.5rem);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  color: var(--c-text);
+}
+
+.donations-copy {
+  align-self: flex-start;
+}
+
+.donations-copy--done {
+  background-color: var(--c-success);
+  border-color: var(--c-success);
+}
+
+.donations-copy--done:hover:not(:disabled):not([aria-disabled='true']) {
+  background-color: var(--c-success-text);
+  border-color: var(--c-success-text);
+}
+
+.donations-copy-status {
+  min-block-size: 1.6em;
+  margin: 0;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-semibold);
+  line-height: 1.6;
+}
+
+.donations-copy-status--success {
+  color: var(--c-success-text);
+}
+
+.donations-copy-status--error {
+  color: var(--c-danger-text);
+}
+
+.donations-details {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.donations-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-4);
+  background-color: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+}
+
+.donations-detail__label {
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text-soft);
+}
+
+.donations-detail__value {
+  margin: 0;
+  font-weight: var(--fw-medium);
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+}
+
+@media (width >= 768px) {
+  .donations-bank__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sp-6);
+    align-items: start;
+  }
+}
+
+.donations-closing__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  max-inline-size: 760px;
+  margin-inline: auto;
+  padding-block: clamp(var(--sp-5), 4vw, var(--sp-8));
+  padding-inline: clamp(var(--sp-5), 5vw, var(--sp-8));
+  background-color: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.donations-closing__title {
+  margin: 0;
+  font-size: var(--fs-h2);
+}
+
+.donations-closing__text {
+  margin: 0;
+  max-inline-size: var(--container-prose);
+  color: var(--c-text-soft);
+  line-height: var(--lh-body);
+}
+
+.donations-closing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  justify-content: center;
+}
+
+@media (width < 640px) {
+  .donations-closing__actions {
+    inline-size: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .donations-closing__actions .btn {
+    inline-size: 100%;
+  }
+
+  .donations-copy {
+    align-self: stretch;
+  }
+}
+
+/* ==========================================================================
+   18. DASHBOARD — AUTHENTICATION
    ========================================================================== */
 
 .dash-boot {
