@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import {
   HomeIcon,
   MailIcon,
+  MegaphoneIcon,
   MicIcon,
   StoreIcon,
   TrophyIcon,
@@ -28,6 +29,7 @@ export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
   { path: '/members', label: 'المنخرطين', icon: UsersIcon },
   { path: '/participants', label: 'المشاركين في المسابقة', icon: MicIcon },
   { path: '/competitions', label: 'المسابقات', icon: TrophyIcon },
+  { path: '/announcements', label: 'الإعلانات', icon: MegaphoneIcon },
   { path: '/store', label: 'المتجر', icon: StoreIcon },
   { path: '/contact', label: 'طلبات الاتصال', icon: MailIcon },
 ];

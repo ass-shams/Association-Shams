@@ -2,6 +2,8 @@ import type { ServerResponse } from 'node:http';
 import { sendJson } from '../_lib/http.js';
 import type { ApiRequest } from '../_lib/http.js';
 
+import adminAnnouncementImageUploads from './_announcement-image-uploads.js';
+import adminAnnouncements from './_announcements.js';
 import adminCompetitions from './_competitions.js';
 import adminContactRequests from './_contact-requests.js';
 import adminMe from './_me.js';
@@ -26,6 +28,8 @@ type AdminHandler = (req: ApiRequest, res: ServerResponse) => Promise<void> | vo
 export const config = { maxDuration: 30 };
 
 const ROUTES: Readonly<Record<string, AdminHandler>> = {
+  'announcement-image-uploads': adminAnnouncementImageUploads,
+  announcements: adminAnnouncements,
   competitions: adminCompetitions,
   'contact-requests': adminContactRequests,
   me: adminMe,

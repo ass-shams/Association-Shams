@@ -12,6 +12,7 @@ describe('dashboard navigation', () => {
       'المنخرطين',
       'المشاركين في المسابقة',
       'المسابقات',
+      'الإعلانات',
       'المتجر',
       'طلبات الاتصال',
     ]);
@@ -22,6 +23,7 @@ describe('dashboard navigation', () => {
     expect(getDashboardPageTitle('/members')).toBe('المنخرطين');
     expect(getDashboardPageTitle('/participants')).toBe('المشاركين في المسابقة');
     expect(getDashboardPageTitle('/competitions')).toBe('المسابقات');
+    expect(getDashboardPageTitle('/announcements')).toBe('الإعلانات');
     expect(getDashboardPageTitle('/store')).toBe('المتجر');
     expect(getDashboardPageTitle('/contact')).toBe('طلبات الاتصال');
   });

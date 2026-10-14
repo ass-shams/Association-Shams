@@ -90,6 +90,16 @@ export function MailIcon({ className }: IconProps) {
   );
 }
 
+export function MegaphoneIcon({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <path d="M3 11v2a1 1 0 0 0 1 1h2l9 4V6L6 10H4a1 1 0 0 0-1 1Z" />
+      <path d="M18 9a4 4 0 0 1 0 6" />
+      <path d="M6 14v5" />
+    </svg>
+  );
+}
+
 export function ExternalLinkIcon({ className }: IconProps) {
   return (
     <svg {...base(className)}>

@@ -20,6 +20,8 @@ const PROTECTED_ROUTES = [
   'participant-video',
   'products',
   'product-image-uploads',
+  'announcements',
+  'announcement-image-uploads',
 ] as const;
 
 function createResponse() {

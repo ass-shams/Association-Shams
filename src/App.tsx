@@ -4,6 +4,8 @@ import Footer from '@/components/footer';
 import Navbar from '@/components/navbar';
 import AboutPage from '@/pages/public/AboutPage';
 import ActivitiesPage from '@/pages/public/ActivitiesPage';
+import AnnouncementDetailsPage from '@/pages/public/AnnouncementDetailsPage';
+import AnnouncementsPage from '@/pages/public/AnnouncementsPage';
 import Competitions from '@/pages/competitions/Competitions';
 import GoldenVoice from '@/pages/competitions/golden-voice/GoldenVoice';
 import ContactPage from '@/pages/public/ContactPage';
@@ -62,6 +64,16 @@ const PUBLIC_PAGE_SEO: Readonly<Record<string, PageSeo>> = {
     description:
       'تتنوع أنشطة جمعية شمس بين الأنشطة التربوية والترفيهية والرحلات والمخيمات والدورات التكوينية والمبادرات الاجتماعية لتنمية مهارات المشاركين.',
     path: '/activities',
+  },
+  '/announcements': {
+    pageTitle: 'الإعلانات',
+    description:
+      'تابع آخر إعلانات جمعية شمس للكفيف والمبصر: المستجدات والأنشطة والمواعيد المهمة والمعلومات الموجّهة للمنخرطين والعموم.',
+    path: '/announcements',
+    breadcrumbs: [
+      { name: 'الرئيسية', path: '/' },
+      { name: 'الإعلانات', path: '/announcements' },
+    ],
   },
   '/competitions': {
     pageTitle: 'المسابقات',
@@ -136,9 +148,9 @@ function notFoundSeo(pathname: string): PageSeo {
   };
 }
 
-/** Public page-managed product routes; these set their own metadata. */
-function isProductRoute(pathname: string): boolean {
-  return pathname.startsWith('/store/');
+/** Public page-managed routes (products, announcement details); these set their own metadata. */
+function isDynamicSeoRoute(pathname: string): boolean {
+  return pathname.startsWith('/store/') || pathname.startsWith('/announcements/');
 }
 
 /** Applies the metadata for a resolved page (hooks are always called here). */
@@ -151,7 +163,7 @@ function SeoUpdater({ seo }: { seo: PageSeo }) {
 function PublicSeo() {
   const { pathname } = useLocation();
 
-  if (isProductRoute(pathname)) {
+  if (isDynamicSeoRoute(pathname)) {
     return null;
   }
 
@@ -199,6 +211,8 @@ function PublicSite() {
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/activities" element={<ActivitiesPage />} />
+            <Route path="/announcements" element={<AnnouncementsPage />} />
+            <Route path="/announcements/:slug" element={<AnnouncementDetailsPage />} />
             <Route path="/competitions" element={<Competitions />} />
             <Route path="/competitions/golden-voice" element={<GoldenVoice />} />
             <Route path="/store" element={<StorePage />} />

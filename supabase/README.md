@@ -570,3 +570,87 @@ override the bucket name. Reuses `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`
    public page and cannot be purchased.
 5. Delete a product with confirmation; it disappears from both the dashboard and
    `/store`.
+
+## 14. Announcements
+
+Public announcements (`/announcements`, `/announcements/<slug>`) managed from the
+dashboard **الإعلانات** section.
+
+### Migrations
+
+- `20261013120000_create_announcements.sql` creates `public.announcements`
+  (`title`, `slug` unique, `body`, `image_url`, `status` in `draft|published`,
+  nullable `published_at`, timestamps), an `updated_at` trigger, indexes, and
+  **RLS** that lets `anon`/`authenticated` read only published announcements whose
+  `published_at` is due. Writes are denied to anonymous users; the
+  `announcements_admin_write` policy reuses the `public.is_admin()` helper for
+  authenticated administrators, and the service role is granted full access.
+- `20261013120100_create_announcement_images_bucket.sql` creates the **public**
+  `announcement-images` bucket (5 MB, JPEG/PNG/WEBP). Uploads are issued as
+  short-lived signed upload URLs after `requireAdmin`; there is no anonymous
+  write policy.
+
+Apply with the usual workflow (Supabase CLI `supabase db push`, or paste into the
+SQL Editor for the correct project). The announcements migration references
+`public.is_admin()`, which is created by the earlier `admin_users` migration, so
+apply the migrations in filename order (as usual).
+
+> Until the migrations are applied, the public endpoint returns `503` and the
+> dashboard section reports a load failure — no data is fabricated.
+
+### Publication rules
+
+- Stored `status`: `draft` / `published`.
+- An announcement is public only when `status = 'published'` **and**
+  `published_at` is not null **and** `published_at <= now()`.
+- The first time an announcement is published, the API sets `published_at` to the
+  submitted date (or "now" when none was provided).
+- Editing an already-published announcement **preserves** its original
+  `published_at`, so the publication date cannot be changed accidentally.
+- Setting a **future** `published_at` schedules the announcement: it is stored as
+  published but stays hidden until the date is due.
+- Unpublishing (`status = 'draft'`) removes it from the public listing and
+  details endpoint immediately.
+
+### Endpoints
+
+| Endpoint | Method | Purpose |
+| --- | --- | --- |
+| `/api/announcements` | `GET` | Public list: published, due announcements (newest first, limit 100). |
+| `/api/announcements?slug=<slug>` | `GET` | Public detail: one published, due announcement, else `404`. |
+| `/api/admin/announcements` | `GET` | `requireAdmin`; all announcements (newest first). |
+| `/api/admin/announcements` | `POST` | `requireAdmin`; create (slug generated server-side). |
+| `/api/admin/announcements` | `PATCH` | `requireAdmin`; `{ id, …fields }` edits, or `{ id, status }` to publish/unpublish. |
+| `/api/admin/announcements` | `DELETE` | `requireAdmin`; `?id=<uuid>`. |
+| `/api/admin/announcement-image-uploads` | `POST` | `requireAdmin`; `{ contentType }` → signed upload URL + public URL. |
+
+All fields are re-validated server-side (`src/data/announcementValidation.ts`).
+An `imageUrl` is accepted only when it points at our own public
+`announcement-images` bucket. The slug is generated once on create and kept
+stable on edit, so public URLs never break. Replacing an image or deleting an
+announcement removes the old object from Storage, but only when it is not
+referenced by another announcement.
+
+### Environment variables
+
+No new variables required. Optional: `ANNOUNCEMENT_IMAGE_BUCKET` (server-only) to
+override the bucket name. Reuses `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`
+(browser) and `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` (server).
+
+### Manual test
+
+1. Apply both migrations.
+2. Dashboard → **الإعلانات** → **إضافة إعلان جديد**: fill the title and body,
+   upload an image (preview appears), set the publication date, then choose
+   **حفظ كمسودة** or **نشر الإعلان**.
+3. Open `https://associationshams.com/announcements` — published announcements
+   appear as cards (newest first); drafts and future-scheduled announcements do
+   **not** appear.
+4. Open an announcement card — the details page (`/announcements/<slug>`) shows
+   the full title, date, image and body; refreshing the URL works.
+5. From the dashboard list, use **إلغاء النشر** — the announcement disappears from
+   the public pages immediately; **نشر** makes it visible again.
+6. Delete an announcement with confirmation; it disappears from the dashboard and
+   the public pages.
+7. Sign out (or use a non-admin account) and confirm `/api/admin/announcements`
+   and `/api/admin/announcement-image-uploads` both return `401`/`403`.

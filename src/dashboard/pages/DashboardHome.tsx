@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import QuickActionCard from '../components/QuickActionCard';
 import StatCard from '../components/StatCard';
-import { MailIcon, MicIcon, StoreIcon, TrophyIcon, UsersIcon } from '../components/icons';
+import { MailIcon, MegaphoneIcon, MicIcon, StoreIcon, TrophyIcon, UsersIcon } from '../components/icons';
+import { countAnnouncements } from '../services/announcementsService';
 import { countContactRequests } from '../services/contactRequestsService';
 import { countCompetitions } from '../services/competitionsService';
 import { countMembers } from '../services/membersService';
@@ -20,6 +21,7 @@ const MEMBERS_LABEL = 'إجمالي المنخرطين';
 const PARTICIPANTS_LABEL = 'إجمالي المشاركين في المسابقة';
 const PRODUCTS_LABEL = 'عدد منتجات المتجر';
 const COMPETITIONS_LABEL = 'عدد المسابقات المتوفرة';
+const ANNOUNCEMENTS_LABEL = 'عدد الإعلانات';
 const CONTACTS_LABEL = 'طلبات الاتصال';
 
 export default function DashboardHome() {
@@ -31,6 +33,8 @@ export default function DashboardHome() {
   const [isLoadingCompetitions, setLoadingCompetitions] = useState(true);
   const [productsCount, setProductsCount] = useState<number | null>(null);
   const [isLoadingProducts, setLoadingProducts] = useState(true);
+  const [announcementsCount, setAnnouncementsCount] = useState<number | null>(null);
+  const [isLoadingAnnouncements, setLoadingAnnouncements] = useState(true);
   const [contactsCount, setContactsCount] = useState<number | null>(null);
   const [isLoadingContacts, setLoadingContacts] = useState(true);
 
@@ -140,6 +144,32 @@ export default function DashboardHome() {
 
   useEffect(() => {
     let active = true;
+    setLoadingAnnouncements(true);
+
+    countAnnouncements()
+      .then((count) => {
+        if (active) {
+          setAnnouncementsCount(count);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setAnnouncementsCount(null);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingAnnouncements(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
     setLoadingContacts(true);
 
     countContactRequests()
@@ -197,6 +227,12 @@ export default function DashboardHome() {
             icon={<TrophyIcon />}
           />
           <StatCard
+            label={ANNOUNCEMENTS_LABEL}
+            value={announcementsCount}
+            isLoading={isLoadingAnnouncements}
+            icon={<MegaphoneIcon />}
+          />
+          <StatCard
             label={CONTACTS_LABEL}
             value={contactsCount}
             isLoading={isLoadingContacts}
@@ -216,6 +252,7 @@ export default function DashboardHome() {
 
         <div className="dash-quick">
           <QuickActionCard to="/store" label="المتجر" icon={<StoreIcon />} />
+          <QuickActionCard to="/announcements" label="الإعلانات" icon={<MegaphoneIcon />} />
           <QuickActionCard to="/members" label="المنخرطين" icon={<UsersIcon />} />
           <QuickActionCard
             to="/participants"

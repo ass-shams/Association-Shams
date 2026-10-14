@@ -14,6 +14,7 @@ export const NAV_LINKS: readonly NavLinkItem[] = [
   { to: '/', label: 'الرئيسية' },
   { to: '/about', label: 'من نحن' },
   { to: '/activities', label: 'أنشطتنا' },
+  { to: '/announcements', label: 'الإعلانات' },
   { to: '/store', label: 'المتجر' },
   { to: '/documents', label: 'الوثائق الإدارية' },
   { to: '/membership', label: 'الانخراط' },

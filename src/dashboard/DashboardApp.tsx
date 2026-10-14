@@ -3,6 +3,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import AuthProvider from './auth/AuthProvider';
 import RequireAuth from './auth/RequireAuth';
 import DashboardLayout from './components/DashboardLayout';
+import AnnouncementsPage from './pages/AnnouncementsPage';
 import CompetitionsPage from './pages/CompetitionsPage';
 import ContactRequestsPage from './pages/ContactRequestsPage';
 import DashboardHome from './pages/DashboardHome';
@@ -43,6 +44,7 @@ export default function DashboardApp() {
             <Route path="members" element={<MembersPage />} />
             <Route path="participants" element={<ParticipantsPage />} />
             <Route path="competitions" element={<CompetitionsPage />} />
+            <Route path="announcements" element={<AnnouncementsPage />} />
             <Route path="store" element={<ProductsPage />} />
             <Route path="contact" element={<ContactRequestsPage />} />
             <Route path="*" element={<DashboardNotFound />} />

@@ -25,6 +25,10 @@ export interface PageSeo {
   readonly path: string;
   /** Optional breadcrumb trail rendered as JSON-LD. */
   readonly breadcrumbs?: readonly BreadcrumbEntry[];
+  /** Optional page-specific social image; defaults to the association logo. */
+  readonly image?: string;
+  /** Optional alt text for the social image. */
+  readonly imageAlt?: string;
   /** When true, the page is kept out of the index (e.g. the 404 page). */
   readonly noindex?: boolean;
 }
@@ -88,6 +92,8 @@ export function applyPageSeo(seo: PageSeo): void {
   const title = formatDocumentTitle(seo.pageTitle);
   const canonical = absoluteUrl(seo.path);
   const robots = seo.noindex ? 'noindex, follow' : 'index, follow';
+  const image = seo.image ?? DEFAULT_OG_IMAGE;
+  const imageAlt = seo.imageAlt ?? OG_IMAGE_ALT;
 
   document.title = title;
 
@@ -101,14 +107,14 @@ export function applyPageSeo(seo: PageSeo): void {
   setMeta('property', 'og:title', title);
   setMeta('property', 'og:description', seo.description);
   setMeta('property', 'og:url', canonical);
-  setMeta('property', 'og:image', DEFAULT_OG_IMAGE);
-  setMeta('property', 'og:image:alt', OG_IMAGE_ALT);
+  setMeta('property', 'og:image', image);
+  setMeta('property', 'og:image:alt', imageAlt);
 
   setMeta('name', 'twitter:card', 'summary_large_image');
   setMeta('name', 'twitter:title', title);
   setMeta('name', 'twitter:description', seo.description);
-  setMeta('name', 'twitter:image', DEFAULT_OG_IMAGE);
-  setMeta('name', 'twitter:image:alt', OG_IMAGE_ALT);
+  setMeta('name', 'twitter:image', image);
+  setMeta('name', 'twitter:image:alt', imageAlt);
 
   setBreadcrumbs(seo.breadcrumbs);
 }
@@ -125,7 +131,7 @@ export function usePageSeo(seo: PageSeo): void {
   const breadcrumbsRef = useRef(seo.breadcrumbs);
   breadcrumbsRef.current = seo.breadcrumbs;
 
-  const { pageTitle, description, path, noindex } = seo;
+  const { pageTitle, description, path, noindex, image, imageAlt } = seo;
 
   useEffect(() => {
     applyPageSeo({
@@ -133,7 +139,9 @@ export function usePageSeo(seo: PageSeo): void {
       description,
       path,
       noindex,
+      image,
+      imageAlt,
       breadcrumbs: breadcrumbsRef.current,
     });
-  }, [pageTitle, description, path, noindex]);
+  }, [pageTitle, description, path, noindex, image, imageAlt]);
 }

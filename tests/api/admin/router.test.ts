@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => {
     participants: make(),
     productImageUploads: make(),
     products: make(),
+    announcements: make(),
+    announcementImageUploads: make(),
   };
 });
 
@@ -28,6 +30,10 @@ vi.mock('../../../api/admin/_product-image-uploads.js', () => ({
   default: mocks.productImageUploads,
 }));
 vi.mock('../../../api/admin/_products.js', () => ({ default: mocks.products }));
+vi.mock('../../../api/admin/_announcements.js', () => ({ default: mocks.announcements }));
+vi.mock('../../../api/admin/_announcement-image-uploads.js', () => ({
+  default: mocks.announcementImageUploads,
+}));
 
 import handler from '../../../api/admin/[route].js';
 
@@ -55,6 +61,8 @@ const CASES = [
   ['participants', mocks.participants],
   ['product-image-uploads', mocks.productImageUploads],
   ['products', mocks.products],
+  ['announcements', mocks.announcements],
+  ['announcement-image-uploads', mocks.announcementImageUploads],
 ] as const;
 
 beforeEach(() => {
